@@ -60,15 +60,64 @@ CREATE TABLE IF NOT EXISTS game_results (
 	game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
 	position INTEGER NOT NULL,
 	player_name TEXT NOT NULL,
-	raw_score INTEGER NOT NULL,
-	rank INTEGER NOT NULL,
-	point REAL NOT NULL,
+	score INTEGER NOT NULL,
 	PRIMARY KEY (game_id, position)
 );`
 	if _, err := r.db.ExecContext(ctx, schema); err != nil {
 		return fmt.Errorf("migrate database: %w", err)
 	}
-	return nil
+	return r.migrateLegacyResults(ctx)
+}
+
+func (r *Repository) migrateLegacyResults(ctx context.Context) error {
+	rows, err := r.db.QueryContext(ctx, `PRAGMA table_info(game_results)`)
+	if err != nil {
+		return fmt.Errorf("inspect game results schema: %w", err)
+	}
+
+	hasRawScore := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, columnType string
+		var defaultValue any
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			rows.Close()
+			return fmt.Errorf("inspect game results column: %w", err)
+		}
+		if name == "raw_score" {
+			hasRawScore = true
+		}
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	if !hasRawScore {
+		return nil
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	const migration = `
+CREATE TABLE game_results_new (
+	game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+	position INTEGER NOT NULL,
+	player_name TEXT NOT NULL,
+	score INTEGER NOT NULL,
+	PRIMARY KEY (game_id, position)
+);
+INSERT INTO game_results_new (game_id, position, player_name, score)
+	SELECT game_id, position, player_name, raw_score / 1000
+	FROM game_results;
+DROP TABLE game_results;
+ALTER TABLE game_results_new RENAME TO game_results;`
+	if _, err := tx.ExecContext(ctx, migration); err != nil {
+		return fmt.Errorf("migrate legacy game results: %w", err)
+	}
+	return tx.Commit()
 }
 
 func (r *Repository) CreateSession(ctx context.Context, session domain.Session) (domain.Session, error) {
@@ -128,9 +177,9 @@ func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.G
 
 	for position, score := range game.Results {
 		_, err = tx.ExecContext(ctx, `
-			INSERT INTO game_results (game_id, position, player_name, raw_score, rank, point)
-			VALUES (?, ?, ?, ?, ?, ?)`,
-			game.ID, position, score.PlayerName, score.RawScore, score.Rank, score.Point,
+			INSERT INTO game_results (game_id, position, player_name, score)
+			VALUES (?, ?, ?, ?)`,
+			game.ID, position, score.PlayerName, score.Score,
 		)
 		if err != nil {
 			return domain.Game{}, err
@@ -145,7 +194,7 @@ func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.G
 
 func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.Game, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT g.id, g.created_at, r.player_name, r.raw_score, r.rank, r.point
+		SELECT g.id, g.created_at, r.player_name, r.score
 		FROM games g
 		JOIN game_results r ON r.game_id = g.id
 		WHERE g.session_id = ?
@@ -161,7 +210,7 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 		var gameID int64
 		var createdAt string
 		var result domain.Result
-		if err := rows.Scan(&gameID, &createdAt, &result.PlayerName, &result.RawScore, &result.Rank, &result.Point); err != nil {
+		if err := rows.Scan(&gameID, &createdAt, &result.PlayerName, &result.Score); err != nil {
 			return nil, err
 		}
 		index, exists := indexByID[gameID]

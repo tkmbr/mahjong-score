@@ -55,14 +55,11 @@ th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: u
 .score-table input { min-width: 150px; border-color: transparent; background: #f7f5ee; }
 .form-footer { margin-top: 18px; }
 .form-footer p { margin: 0; font-variant-numeric: tabular-nums; }
-.warning { color: #a13a24; font-weight: 700; }
 .message { min-height: 1.5em; margin: 12px 0 0; color: #a13a24; }
 
 .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .game-card { padding: 18px; border: 1px solid #ded9cb; border-radius: 8px; }
 .game-card h3 { color: #17613f; }
-.positive { color: #17613f; font-weight: 700; }
-.negative { color: #a13a24; font-weight: 700; }
 .empty-state { padding: 30px; color: #748078; text-align: center; background: #f7f5ee; border-radius: 8px; }
 
 dialog { width: min(440px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 10px; box-shadow: 0 20px 70px rgb(0 0 0 / 30%); }

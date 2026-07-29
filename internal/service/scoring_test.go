@@ -6,39 +6,35 @@ import (
 	"github.com/tkmbr/mahjong-score/internal/domain"
 )
 
-func TestCalculateStandardRule(t *testing.T) {
+func TestValidateResults(t *testing.T) {
 	input := []domain.Result{
-		{PlayerName: "東", RawScore: 42100},
-		{PlayerName: "南", RawScore: 28700},
-		{PlayerName: "西", RawScore: 19400},
-		{PlayerName: "北", RawScore: 9800},
+		{PlayerName: " 東 ", Score: 40},
+		{PlayerName: "南", Score: 30},
+		{PlayerName: "西", Score: 20},
+		{PlayerName: "北", Score: 10},
 	}
 
-	got, err := Calculate(input, domain.StandardRule)
+	got, err := ValidateResults(input)
 	if err != nil {
-		t.Fatalf("Calculate returned error: %v", err)
+		t.Fatalf("ValidateResults returned error: %v", err)
 	}
-
-	wantPoints := []float64{52.1, 8.7, -20.6, -40.2}
-	for i := range got {
-		if got[i].Rank != i+1 {
-			t.Errorf("result %d rank = %d, want %d", i, got[i].Rank, i+1)
-		}
-		if got[i].Point != wantPoints[i] {
-			t.Errorf("result %d point = %.1f, want %.1f", i, got[i].Point, wantPoints[i])
-		}
+	if got[0].PlayerName != "東" {
+		t.Errorf("PlayerName = %q, want %q", got[0].PlayerName, "東")
+	}
+	if got[0].Score != 40 {
+		t.Errorf("Score = %d, want 40", got[0].Score)
 	}
 }
 
-func TestCalculateRejectsDuplicateScores(t *testing.T) {
+func TestValidateResultsAllowsTiesAndAnyTotal(t *testing.T) {
 	input := []domain.Result{
-		{PlayerName: "A", RawScore: 25000},
-		{PlayerName: "B", RawScore: 25000},
-		{PlayerName: "C", RawScore: 30000},
-		{PlayerName: "D", RawScore: 20000},
+		{PlayerName: "A", Score: 12},
+		{PlayerName: "B", Score: 12},
+		{PlayerName: "C", Score: -5},
+		{PlayerName: "D", Score: 0},
 	}
 
-	if _, err := Calculate(input, domain.StandardRule); err != ErrDuplicateScore {
-		t.Fatalf("Calculate error = %v, want %v", err, ErrDuplicateScore)
+	if _, err := ValidateResults(input); err != nil {
+		t.Fatalf("ValidateResults returned error: %v", err)
 	}
 }

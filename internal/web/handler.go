@@ -99,7 +99,7 @@ func (h *Handler) createGame(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "入力形式が正しくありません")
 		return
 	}
-	results, err := service.Calculate(input.Results, domain.StandardRule)
+	results, err := service.ValidateResults(input.Results)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return

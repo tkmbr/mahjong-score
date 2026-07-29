@@ -13,7 +13,7 @@ for (let index = 0; index < 4; index += 1) {
   scoreInputs.insertAdjacentHTML("beforeend", `
     <tr>
       <td><input name="player-${index}" autocomplete="off" required placeholder="プレイヤー ${index + 1}"></td>
-      <td><input name="score-${index}" type="number" inputmode="numeric" required value="25000"></td>
+      <td><input name="score-${index}" type="number" inputmode="numeric" required value="25" aria-label="1000点単位のスコア"></td>
     </tr>
   `);
 }
@@ -60,13 +60,11 @@ async function loadGames() {
     <article class="game-card">
       <h3>${games.length - gameIndex}回戦</h3>
       <table>
-        <thead><tr><th>順位</th><th>プレイヤー</th><th>素点</th><th>収支</th></tr></thead>
-        <tbody>${[...game.results].sort((a, b) => a.rank - b.rank).map(result => `
+        <thead><tr><th>プレイヤー</th><th>スコア（千点）</th></tr></thead>
+        <tbody>${game.results.map(result => `
           <tr>
-            <td>${result.rank}</td>
             <td>${escapeHTML(result.playerName)}</td>
-            <td>${result.rawScore.toLocaleString()}</td>
-            <td class="${result.point >= 0 ? "positive" : "negative"}">${result.point >= 0 ? "+" : ""}${result.point.toFixed(1)}</td>
+            <td>${result.score.toLocaleString()}</td>
           </tr>`).join("")}
         </tbody>
       </table>
@@ -76,8 +74,7 @@ async function loadGames() {
 function updateTotal() {
   const total = [...scoreForm.querySelectorAll('input[name^="score-"]')]
     .reduce((sum, input) => sum + Number(input.value || 0), 0);
-  scoreTotal.textContent = `合計 ${total.toLocaleString()}点`;
-  scoreTotal.classList.toggle("warning", total !== 100000);
+  scoreTotal.textContent = `合計 ${total.toLocaleString()}（千点）`;
 }
 
 scoreForm.addEventListener("input", updateTotal);
@@ -86,7 +83,7 @@ scoreForm.addEventListener("submit", async event => {
   formMessage.textContent = "";
   const results = Array.from({length: 4}, (_, index) => ({
     playerName: scoreForm.elements[`player-${index}`].value,
-    rawScore: Number(scoreForm.elements[`score-${index}`].value),
+    score: Number(scoreForm.elements[`score-${index}`].value),
   }));
   try {
     await api(`/api/sessions/${sessionSelect.value}/games`, {
