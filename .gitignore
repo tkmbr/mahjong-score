@@ -1,0 +1,6 @@
+/mahjong-score
+/data/
+*.db
+*.db-shm
+*.db-wal
+.env
