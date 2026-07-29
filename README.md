@@ -27,6 +27,13 @@ docker compose run --rm app go test ./...
 docker compose down
 ```
 
+開発中にSQLiteのスキーマを変更した場合は、migrationを行わずボリュームを作り直します。
+
+```powershell
+docker compose down --volumes
+docker compose up --build
+```
+
 ## 現在のMVP
 
 - 対局日の作成
@@ -36,3 +43,4 @@ docker compose down
 
 スコアは1000点単位の整数で入力します。たとえば40,000点は`40`です。
 ウマ・オカなどのルール計算は行わず、入力値をそのまま保存します。
+4人分のスコアは、合計が`0`になる必要があります。

@@ -9,9 +9,9 @@ import (
 func TestValidateResults(t *testing.T) {
 	input := []domain.Result{
 		{PlayerName: " 東 ", Score: 40},
-		{PlayerName: "南", Score: 30},
-		{PlayerName: "西", Score: 20},
-		{PlayerName: "北", Score: 10},
+		{PlayerName: "南", Score: 10},
+		{PlayerName: "西", Score: -20},
+		{PlayerName: "北", Score: -30},
 	}
 
 	got, err := ValidateResults(input)
@@ -26,15 +26,28 @@ func TestValidateResults(t *testing.T) {
 	}
 }
 
-func TestValidateResultsAllowsTiesAndAnyTotal(t *testing.T) {
+func TestValidateResultsAllowsTies(t *testing.T) {
 	input := []domain.Result{
 		{PlayerName: "A", Score: 12},
 		{PlayerName: "B", Score: 12},
-		{PlayerName: "C", Score: -5},
-		{PlayerName: "D", Score: 0},
+		{PlayerName: "C", Score: -12},
+		{PlayerName: "D", Score: -12},
 	}
 
 	if _, err := ValidateResults(input); err != nil {
 		t.Fatalf("ValidateResults returned error: %v", err)
+	}
+}
+
+func TestValidateResultsRejectsNonZeroTotal(t *testing.T) {
+	input := []domain.Result{
+		{PlayerName: "A", Score: 40},
+		{PlayerName: "B", Score: 30},
+		{PlayerName: "C", Score: 20},
+		{PlayerName: "D", Score: 10},
+	}
+
+	if _, err := ValidateResults(input); err != ErrScoreTotal {
+		t.Fatalf("ValidateResults error = %v, want %v", err, ErrScoreTotal)
 	}
 }

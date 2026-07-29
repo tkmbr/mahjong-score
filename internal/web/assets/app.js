@@ -13,7 +13,7 @@ for (let index = 0; index < 4; index += 1) {
   scoreInputs.insertAdjacentHTML("beforeend", `
     <tr>
       <td><input name="player-${index}" autocomplete="off" required placeholder="プレイヤー ${index + 1}"></td>
-      <td><input name="score-${index}" type="number" inputmode="numeric" required value="25" aria-label="1000点単位のスコア"></td>
+      <td><input name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="1000点単位のスコア"></td>
     </tr>
   `);
 }
@@ -75,6 +75,7 @@ function updateTotal() {
   const total = [...scoreForm.querySelectorAll('input[name^="score-"]')]
     .reduce((sum, input) => sum + Number(input.value || 0), 0);
   scoreTotal.textContent = `合計 ${total.toLocaleString()}（千点）`;
+  scoreTotal.classList.toggle("warning", total !== 0);
 }
 
 scoreForm.addEventListener("input", updateTotal);

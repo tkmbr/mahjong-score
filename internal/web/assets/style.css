@@ -55,6 +55,7 @@ th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: u
 .score-table input { min-width: 150px; border-color: transparent; background: #f7f5ee; }
 .form-footer { margin-top: 18px; }
 .form-footer p { margin: 0; font-variant-numeric: tabular-nums; }
+.warning { color: #a13a24; font-weight: 700; }
 .message { min-height: 1.5em; margin: 12px 0 0; color: #a13a24; }
 
 .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }

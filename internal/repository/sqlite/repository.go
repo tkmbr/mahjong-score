@@ -28,7 +28,7 @@ func Open(path string) (*Repository, error) {
 	db.SetMaxOpenConns(1)
 
 	repository := &Repository{db: db}
-	if err := repository.migrate(context.Background()); err != nil {
+	if err := repository.initializeSchema(context.Background()); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (r *Repository) Close() error {
 	return r.db.Close()
 }
 
-func (r *Repository) migrate(ctx context.Context) error {
+func (r *Repository) initializeSchema(ctx context.Context) error {
 	const schema = `
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
@@ -64,60 +64,9 @@ CREATE TABLE IF NOT EXISTS game_results (
 	PRIMARY KEY (game_id, position)
 );`
 	if _, err := r.db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("migrate database: %w", err)
+		return fmt.Errorf("initialize database schema: %w", err)
 	}
-	return r.migrateLegacyResults(ctx)
-}
-
-func (r *Repository) migrateLegacyResults(ctx context.Context) error {
-	rows, err := r.db.QueryContext(ctx, `PRAGMA table_info(game_results)`)
-	if err != nil {
-		return fmt.Errorf("inspect game results schema: %w", err)
-	}
-
-	hasRawScore := false
-	for rows.Next() {
-		var cid, notNull, primaryKey int
-		var name, columnType string
-		var defaultValue any
-		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
-			rows.Close()
-			return fmt.Errorf("inspect game results column: %w", err)
-		}
-		if name == "raw_score" {
-			hasRawScore = true
-		}
-	}
-	if err := rows.Close(); err != nil {
-		return err
-	}
-	if !hasRawScore {
-		return nil
-	}
-
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	const migration = `
-CREATE TABLE game_results_new (
-	game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-	position INTEGER NOT NULL,
-	player_name TEXT NOT NULL,
-	score INTEGER NOT NULL,
-	PRIMARY KEY (game_id, position)
-);
-INSERT INTO game_results_new (game_id, position, player_name, score)
-	SELECT game_id, position, player_name, raw_score / 1000
-	FROM game_results;
-DROP TABLE game_results;
-ALTER TABLE game_results_new RENAME TO game_results;`
-	if _, err := tx.ExecContext(ctx, migration); err != nil {
-		return fmt.Errorf("migrate legacy game results: %w", err)
-	}
-	return tx.Commit()
+	return nil
 }
 
 func (r *Repository) CreateSession(ctx context.Context, session domain.Session) (domain.Session, error) {

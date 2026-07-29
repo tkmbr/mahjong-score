@@ -10,6 +10,7 @@ import (
 var (
 	ErrPlayerCount = errors.New("4人分の結果を入力してください")
 	ErrPlayerName  = errors.New("プレイヤー名を入力してください")
+	ErrScoreTotal  = errors.New("スコアの合計が0になるように入力してください")
 )
 
 func ValidateResults(input []domain.Result) ([]domain.Result, error) {
@@ -19,6 +20,7 @@ func ValidateResults(input []domain.Result) ([]domain.Result, error) {
 
 	results := append([]domain.Result(nil), input...)
 	seenNames := make(map[string]struct{}, domain.PlayerCount)
+	total := 0
 	for i := range results {
 		results[i].PlayerName = strings.TrimSpace(results[i].PlayerName)
 		if results[i].PlayerName == "" {
@@ -28,6 +30,10 @@ func ValidateResults(input []domain.Result) ([]domain.Result, error) {
 			return nil, errors.New("プレイヤー名が重複しています")
 		}
 		seenNames[results[i].PlayerName] = struct{}{}
+		total += results[i].Score
+	}
+	if total != 0 {
+		return nil, ErrScoreTotal
 	}
 	return results, nil
 }
