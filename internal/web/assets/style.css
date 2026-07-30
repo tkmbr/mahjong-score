@@ -28,6 +28,24 @@ h2 { margin-bottom: 0; }
 
 main { width: min(1080px, calc(100% - 32px)); margin: 32px auto 72px; }
 .panel { padding: 24px; margin-bottom: 20px; background: #fffefa; border: 1px solid #ded9cb; border-radius: 10px; box-shadow: 0 8px 24px rgb(27 48 37 / 8%); }
+#score-panel { transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease; }
+#score-panel.is-editing {
+  background: #fffaf0;
+  border-color: #d8a936;
+  box-shadow: 0 0 0 3px rgb(216 169 54 / 20%), 0 10px 28px rgb(27 48 37 / 12%);
+}
+#score-panel.is-editing #score-panel-mode {
+  display: inline-block;
+  padding: 4px 8px;
+  color: #fff;
+  background: #a56f00;
+  border-radius: 4px;
+  letter-spacing: .14em;
+}
+#score-panel.is-editing .score-table input {
+  background: #fffdf8;
+  border-color: #e4d5ad;
+}
 .session-panel { display: grid; grid-template-columns: auto minmax(200px, 400px) 1fr; align-items: center; gap: 16px; }
 .panel-heading, .form-footer, .dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .panel-heading { margin-bottom: 20px; }

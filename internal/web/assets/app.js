@@ -1,6 +1,8 @@
 const sessionSelect = document.querySelector("#session-select");
 const sessionActions = document.querySelector("#session-actions");
 const scorePanel = document.querySelector("#score-panel");
+const scorePanelMode = document.querySelector("#score-panel-mode");
+const scorePanelTitle = document.querySelector("#score-panel-title");
 const historyPanel = document.querySelector("#history-panel");
 const scoreForm = document.querySelector("#score-form");
 const scoreInputs = document.querySelector("#score-inputs");
@@ -264,6 +266,9 @@ function startGameEdit(gameID) {
   const game = currentGames.find(item => item.id === gameID);
   if (!game) return;
   editingGameID = gameID;
+  scorePanel.classList.add("is-editing");
+  scorePanelMode.textContent = "EDITING";
+  scorePanelTitle.textContent = "半荘結果を編集中";
   game.results.forEach((result, index) => {
     scoreForm.elements[`player-${index}`].value = result.playerName;
     scoreForm.elements[`score-${index}`].value = result.score;
@@ -277,6 +282,9 @@ function startGameEdit(gameID) {
 
 function cancelGameEdit(clearInputs = true) {
   editingGameID = null;
+  scorePanel.classList.remove("is-editing");
+  scorePanelMode.textContent = "NEW GAME";
+  scorePanelTitle.textContent = "半荘結果を入力";
   saveGameButton.textContent = "半荘を保存";
   cancelGameEditButton.hidden = true;
   if (clearInputs) {
