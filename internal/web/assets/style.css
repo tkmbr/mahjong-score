@@ -31,6 +31,10 @@ main { width: min(1080px, calc(100% - 32px)); margin: 32px auto 72px; }
 .panel-heading, .form-footer, .dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
 .panel-heading { margin-bottom: 20px; }
 .rule-note { margin: 0; color: #66736c; font-size: .9rem; }
+.view-switcher { display: inline-flex; padding: 3px; background: #eeece4; border: 1px solid #ded9cb; border-radius: 8px; }
+.view-button { display: flex; align-items: center; gap: 6px; padding: 7px 11px; color: #66736c; background: transparent; font-size: .85rem; }
+.view-button:hover { color: #17613f; }
+.view-button.is-active { color: white; background: #17613f; box-shadow: 0 1px 3px rgb(24 37 31 / 18%); }
 
 select, input {
   width: 100%;
@@ -61,6 +65,15 @@ th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: u
 .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .game-card { padding: 18px; border: 1px solid #ded9cb; border-radius: 8px; }
 .game-card h3 { color: #17613f; }
+.games-table-wrap { overflow-x: auto; border: 1px solid #ded9cb; border-radius: 8px; }
+.games-table { min-width: 560px; font-variant-numeric: tabular-nums; }
+.games-table th, .games-table td { height: 48px; white-space: nowrap; text-align: right; }
+.games-table thead th { position: sticky; top: 0; color: #f8f4e8; background: #17613f; }
+.games-table th:first-child { position: sticky; left: 0; z-index: 1; text-align: left; }
+.games-table tbody th { color: #17613f; background: #f7f5ee; }
+.games-table tbody tr:nth-child(even) td { background: #faf9f4; }
+.games-table tbody tr:hover td, .games-table tbody tr:hover th { background: #fff4d8; }
+.table-unit { margin: 10px 12px; color: #748078; font-size: .78rem; text-align: right; }
 .empty-state { padding: 30px; color: #748078; text-align: center; background: #f7f5ee; border-radius: 8px; }
 
 dialog { width: min(440px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 10px; box-shadow: 0 20px 70px rgb(0 0 0 / 30%); }
@@ -74,5 +87,8 @@ dialog label { display: grid; gap: 7px; font-weight: 700; }
   .site-header h1 { font-size: 2rem; }
   .session-panel { grid-template-columns: 1fr; }
   .panel-heading { align-items: flex-start; flex-direction: column; }
+  #history-panel .panel-heading { align-items: stretch; }
+  .view-switcher { align-self: stretch; }
+  .view-button { flex: 1; justify-content: center; }
   .panel { padding: 18px; }
 }
