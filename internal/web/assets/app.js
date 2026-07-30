@@ -72,9 +72,9 @@ function renderGames() {
   }
 
   gamesContainer.className = "games";
-  gamesContainer.innerHTML = currentGames.map((game, gameIndex) => `
+  gamesContainer.innerHTML = [...currentGames].reverse().map((game, gameIndex) => `
     <article class="game-card">
-      <h3>${currentGames.length - gameIndex}回戦</h3>
+      <h3>${gameIndex + 1}回戦</h3>
       <table>
         <thead><tr><th>プレイヤー</th><th>スコア（千点）</th></tr></thead>
         <tbody>${game.results.map(result => `
@@ -105,11 +105,11 @@ function renderGamesTable() {
         </tr>
       </thead>
       <tbody>
-        ${currentGames.map((game, gameIndex) => {
+        ${[...currentGames].reverse().map((game, gameIndex) => {
           const scores = new Map(game.results.map(result => [result.playerName, result.score]));
           return `
             <tr>
-              <th scope="row">${currentGames.length - gameIndex}回戦</th>
+              <th scope="row">${gameIndex + 1}回戦</th>
               ${playerNames.map(name => {
                 const score = scores.get(name);
                 return `<td>${score === undefined ? "—" : score.toLocaleString()}</td>`;
