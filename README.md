@@ -13,8 +13,11 @@
 
 ## 起動
 
+Windows側のPowerShellでリポジトリのディレクトリを開き、WSL内のDockerを使用します。
+WSL内でDocker Engineが起動している必要があります。
+
 ```powershell
-docker compose up --build
+wsl docker compose up --build
 ```
 
 ブラウザで <http://localhost:8080> を開きます。SQLiteデータはDockerボリュームに保存されます。
@@ -22,12 +25,13 @@ docker compose up --build
 ## 開発コマンド
 
 ```powershell
-docker compose build
-docker compose run --rm app go test ./...
-docker compose down
+wsl docker compose build
+wsl sh -lc 'docker run --rm -v "$PWD:/src" -w /src golang:1.26.5-bookworm go test ./...'
+wsl docker compose down
 ```
 
-ローカルでGoコマンドを実行する場合はGo 1.26が必要です。Go 1.21以降の
+テストは公式Goイメージ内で実行するため、Windows側にGoをインストールする必要はありません。
+ローカルでGoコマンドを直接実行する場合はGo 1.26が必要です。Go 1.21以降の
 `GOTOOLCHAIN=auto`（デフォルト）を利用している環境では、必要なGo 1.26
 ツールチェーンが自動的にダウンロードされます。インストール済みのGo自体の
 バージョンは変更されません。
@@ -35,8 +39,8 @@ docker compose down
 開発中にSQLiteのスキーマを変更した場合は、migrationを行わずボリュームを作り直します。
 
 ```powershell
-docker compose down --volumes
-docker compose up --build
+wsl docker compose down --volumes
+wsl docker compose up --build
 ```
 
 ## 現在のMVP
