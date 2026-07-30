@@ -4,7 +4,7 @@
 
 ## 技術構成
 
-- Go 1.24
+- Go 1.26（Dockerイメージは1.26.5に固定）
 - SQLite
 - HTML / CSS / Vanilla JavaScript
 - Docker Compose
@@ -26,6 +26,11 @@ docker compose build
 docker compose run --rm app go test ./...
 docker compose down
 ```
+
+ローカルでGoコマンドを実行する場合はGo 1.26が必要です。Go 1.21以降の
+`GOTOOLCHAIN=auto`（デフォルト）を利用している環境では、必要なGo 1.26
+ツールチェーンが自動的にダウンロードされます。インストール済みのGo自体の
+バージョンは変更されません。
 
 開発中にSQLiteのスキーマを変更した場合は、migrationを行わずボリュームを作り直します。
 
