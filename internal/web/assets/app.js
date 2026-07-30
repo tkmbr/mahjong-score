@@ -74,19 +74,28 @@ function renderGames() {
   gamesContainer.className = "games";
   gamesContainer.innerHTML = renderScoreSummary() + [...currentGames].reverse().map((game, gameIndex) => `
     <article class="game-card">
-      <h3>${gameIndex + 1}回戦</h3>
+      <div class="game-card-heading">
+        <h3>${gameIndex + 1}回戦</h3>
+        ${renderGameTime(game.createdAt)}
+      </div>
       <table>
         <thead><tr><th>プレイヤー</th><th>スコア（千点）</th></tr></thead>
         <tbody>${game.results.map(result => `
           <tr>
             <td>${escapeHTML(result.playerName)}</td>
-            <td>${result.score.toLocaleString()}</td>
+            <td><span class="score-value score-rank-${getScoreRank(game, result.score)}">${result.score.toLocaleString()}</span></td>
           </tr>`).join("")}
         </tbody>
       </table>
     </article>`).join("");
 }
 
+function getScoreRank(game, score) {
+  const distinctScores = [...new Set(game.results.map(result => result.score))]
+    .sort((left, right) => right - left);
+  const rank = distinctScores.indexOf(score) + 1;
+  return rank <= 2 ? rank : 0;
+}
 function renderScoreSummary() {
   const totals = getPlayerTotals().sort((left, right) => right.total - left.total);
   return `
@@ -122,6 +131,23 @@ function getPlayerTotals() {
 function formatScore(score) {
   return `${score > 0 ? "+" : ""}${score.toLocaleString()}`;
 }
+function renderGameTime(createdAt) {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return '<span class="game-time">—</span>';
+
+  const time = new Intl.DateTimeFormat("ja-JP", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+  const fullDate = new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+  return `<time class="game-time" datetime="${escapeHTML(createdAt)}" title="${escapeHTML(fullDate)}">${time}</time>`;
+}
 function renderGamesTable() {
   const playerNames = [];
   for (const game of [...currentGames].reverse()) {
@@ -136,6 +162,7 @@ function renderGamesTable() {
       <thead>
         <tr>
           <th scope="col">回戦</th>
+          <th scope="col">記録時刻</th>
           ${playerNames.map(name => `<th scope="col">${escapeHTML(name)}</th>`).join("")}
         </tr>
       </thead>
@@ -145,16 +172,17 @@ function renderGamesTable() {
           return `
             <tr>
               <th scope="row">${gameIndex + 1}回戦</th>
+              <td>${renderGameTime(game.createdAt)}</td>
               ${playerNames.map(name => {
                 const score = scores.get(name);
-                return `<td>${score === undefined ? "—" : score.toLocaleString()}</td>`;
+                return `<td>${score === undefined ? "—" : `<span class="score-value score-rank-${getScoreRank(game, score)}">${score.toLocaleString()}</span>`}</td>`;
               }).join("")}
             </tr>`;
         }).join("")}
       </tbody>
       <tfoot>
         <tr>
-          <th scope="row">合計得点</th>
+          <th scope="row" colspan="2">合計得点</th>
           ${playerNames.map(name => {
             const total = currentGames.reduce((sum, game) => {
               const result = game.results.find(item => item.playerName === name);
