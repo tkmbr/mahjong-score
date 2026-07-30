@@ -242,3 +242,52 @@ func (r *Repository) DeleteGame(ctx context.Context, sessionID, gameID int64) (b
 	affected, err := result.RowsAffected()
 	return affected > 0, err
 }
+
+func (r *Repository) ImportSessions(ctx context.Context, sessions []domain.SessionWithGames) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Export data is ordered newest first. Insert it in reverse so ID-based
+	// listing preserves the same order after import.
+	for sessionIndex := len(sessions) - 1; sessionIndex >= 0; sessionIndex-- {
+		item := sessions[sessionIndex]
+		sessionResult, err := tx.ExecContext(ctx,
+			`INSERT INTO sessions (name, played_at) VALUES (?, ?)`,
+			item.Session.Name, item.Session.PlayedAt.Format(time.RFC3339),
+		)
+		if err != nil {
+			return err
+		}
+		sessionID, err := sessionResult.LastInsertId()
+		if err != nil {
+			return err
+		}
+		for gameIndex := len(item.Games) - 1; gameIndex >= 0; gameIndex-- {
+			game := item.Games[gameIndex]
+			gameResult, err := tx.ExecContext(ctx,
+				`INSERT INTO games (session_id, created_at) VALUES (?, ?)`,
+				sessionID, game.CreatedAt.Format(time.RFC3339),
+			)
+			if err != nil {
+				return err
+			}
+			gameID, err := gameResult.LastInsertId()
+			if err != nil {
+				return err
+			}
+			for position, result := range game.Results {
+				if _, err := tx.ExecContext(ctx, `
+					INSERT INTO game_results (game_id, position, player_name, score)
+					VALUES (?, ?, ?, ?)`,
+					gameID, position, result.PlayerName, result.Score,
+				); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return tx.Commit()
+}

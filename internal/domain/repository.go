@@ -11,4 +11,5 @@ type Repository interface {
 	ListGames(ctx context.Context, sessionID int64) ([]Game, error)
 	UpdateGame(ctx context.Context, game Game) (bool, error)
 	DeleteGame(ctx context.Context, sessionID, gameID int64) (bool, error)
+	ImportSessions(ctx context.Context, sessions []SessionWithGames) error
 }

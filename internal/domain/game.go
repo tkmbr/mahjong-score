@@ -21,3 +21,8 @@ type Game struct {
 	CreatedAt time.Time `json:"createdAt"`
 	Results   []Result  `json:"results"`
 }
+
+type SessionWithGames struct {
+	Session Session
+	Games   []Game
+}

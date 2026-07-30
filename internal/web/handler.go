@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"io"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -20,6 +21,8 @@ func NewHandler(repository domain.Repository) http.Handler {
 	handler := &Handler{repository: repository}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", handler.health)
+	mux.HandleFunc("GET /api/export", handler.exportData)
+	mux.HandleFunc("POST /api/import", handler.importData)
 	mux.HandleFunc("GET /api/sessions", handler.listSessions)
 	mux.HandleFunc("POST /api/sessions", handler.createSession)
 	mux.HandleFunc("PUT /api/sessions/{sessionID}", handler.updateSession)
@@ -39,6 +42,74 @@ func NewHandler(repository domain.Repository) http.Handler {
 
 func (h *Handler) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) exportData(w http.ResponseWriter, r *http.Request) {
+	sessions, err := h.repository.ListSessions(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "エクスポートデータを取得できませんでした")
+		return
+	}
+	backup := service.Backup{
+		Format:     service.BackupFormat,
+		Version:    service.BackupVersion,
+		ExportedAt: time.Now(),
+		Sessions:   make([]service.BackupSession, 0, len(sessions)),
+	}
+	for _, session := range sessions {
+		games, err := h.repository.ListGames(r.Context(), session.ID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "エクスポートデータを取得できませんでした")
+			return
+		}
+		exportSession := service.BackupSession{
+			Name:     session.Name,
+			PlayedAt: session.PlayedAt.Format("2006-01-02"),
+			Games:    make([]service.BackupGame, 0, len(games)),
+		}
+		for _, game := range games {
+			exportSession.Games = append(exportSession.Games, service.BackupGame{
+				CreatedAt: game.CreatedAt,
+				Results:   game.Results,
+			})
+		}
+		backup.Sessions = append(backup.Sessions, exportSession)
+	}
+	w.Header().Set("Content-Disposition", `attachment; filename="mahjong-score-backup.json"`)
+	writeJSON(w, http.StatusOK, backup)
+}
+
+func (h *Handler) importData(w http.ResponseWriter, r *http.Request) {
+	const maxBackupSize = 10 << 20
+	var backup service.Backup
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBackupSize))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&backup); err != nil {
+		writeError(w, http.StatusBadRequest, "バックアップファイルの形式が正しくありません")
+		return
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		writeError(w, http.StatusBadRequest, "バックアップファイルの形式が正しくありません")
+		return
+	}
+	sessions, err := service.ValidateBackup(backup)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err := h.repository.ImportSessions(r.Context(), sessions); err != nil {
+		writeError(w, http.StatusInternalServerError, "バックアップをインポートできませんでした")
+		return
+	}
+	gameCount := 0
+	for _, session := range sessions {
+		gameCount += len(session.Games)
+	}
+	writeJSON(w, http.StatusCreated, map[string]int{
+		"sessions": len(sessions),
+		"games":    gameCount,
+	})
 }
 
 func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request) {

@@ -95,3 +95,42 @@ func TestUpdatesReturnNotFound(t *testing.T) {
 		t.Fatalf("UpdateGame() = (%v, %v), want (false, nil)", found, err)
 	}
 }
+
+func TestImportSessions(t *testing.T) {
+	repository, err := Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer repository.Close()
+
+	createdAt := time.Date(2026, 7, 30, 14, 30, 0, 0, time.FixedZone("JST", 9*60*60))
+	err = repository.ImportSessions(context.Background(), []domain.SessionWithGames{{
+		Session: domain.Session{
+			Name:     "インポート",
+			PlayedAt: time.Date(2026, 7, 30, 0, 0, 0, 0, time.UTC),
+		},
+		Games: []domain.Game{{
+			CreatedAt: createdAt,
+			Results: []domain.Result{
+				{PlayerName: "A", Score: 30},
+				{PlayerName: "B", Score: 10},
+				{PlayerName: "C", Score: -10},
+				{PlayerName: "D", Score: -30},
+			},
+		}},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sessions, err := repository.ListSessions(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	games, err := repository.ListGames(context.Background(), sessions[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sessions) != 1 || len(games) != 1 || !games[0].CreatedAt.Equal(createdAt) {
+		t.Fatalf("imported sessions = %#v, games = %#v", sessions, games)
+	}
+}

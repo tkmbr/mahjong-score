@@ -12,10 +12,16 @@
       <p class="eyebrow">MAHJONG SCORE</p>
       <h1>半荘の記録</h1>
     </div>
-    <button id="new-session-button" class="secondary-button" type="button">対局日を作成</button>
+    <div class="header-actions">
+      <a class="header-button" href="/api/export" download="mahjong-score-backup.json">エクスポート</a>
+      <button id="import-button" class="header-button" type="button">インポート</button>
+      <input id="import-file" type="file" accept="application/json,.json" hidden>
+      <button id="new-session-button" class="secondary-button" type="button">対局日を作成</button>
+    </div>
   </header>
 
   <main>
+    <p id="backup-message" class="backup-message" role="status" hidden></p>
     <section class="panel session-panel">
       <label for="session-select">対局日</label>
       <select id="session-select">

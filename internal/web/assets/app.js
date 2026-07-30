@@ -1,4 +1,7 @@
 const sessionSelect = document.querySelector("#session-select");
+const importButton = document.querySelector("#import-button");
+const importFile = document.querySelector("#import-file");
+const backupMessage = document.querySelector("#backup-message");
 const sessionActions = document.querySelector("#session-actions");
 const scorePanel = document.querySelector("#score-panel");
 const scorePanelMode = document.querySelector("#score-panel-mode");
@@ -333,6 +336,34 @@ document.querySelector("#new-session-button").addEventListener("click", () => {
   document.querySelector("#save-session-button").textContent = "作成する";
   document.querySelector("#session-date").valueAsDate = new Date();
   dialog.showModal();
+});
+
+importButton.addEventListener("click", () => {
+  importFile.value = "";
+  importFile.click();
+});
+
+importFile.addEventListener("change", async () => {
+  const file = importFile.files[0];
+  if (!file) return;
+  backupMessage.hidden = false;
+  backupMessage.classList.remove("is-error");
+  backupMessage.textContent = "インポートしています…";
+  importButton.disabled = true;
+  try {
+    const result = await api("/api/import", {
+      method: "POST",
+      body: file,
+    });
+    backupMessage.textContent =
+      `対局日 ${result.sessions}件、半荘結果 ${result.games}件をインポートしました。`;
+    await loadSessions(sessionSelect.value);
+  } catch (error) {
+    backupMessage.classList.add("is-error");
+    backupMessage.textContent = error.message;
+  } finally {
+    importButton.disabled = false;
+  }
 });
 document.querySelector("#close-dialog").addEventListener("click", () => dialog.close());
 sessionSelect.addEventListener("change", selectSession);
