@@ -72,7 +72,7 @@ function renderGames() {
   }
 
   gamesContainer.className = "games";
-  gamesContainer.innerHTML = [...currentGames].reverse().map((game, gameIndex) => `
+  gamesContainer.innerHTML = renderScoreSummary() + [...currentGames].reverse().map((game, gameIndex) => `
     <article class="game-card">
       <h3>${gameIndex + 1}回戦</h3>
       <table>
@@ -87,6 +87,41 @@ function renderGames() {
     </article>`).join("");
 }
 
+function renderScoreSummary() {
+  const totals = getPlayerTotals().sort((left, right) => right.total - left.total);
+  return `
+    <section class="score-summary" aria-labelledby="score-summary-title">
+      <div class="score-summary-heading">
+        <div>
+          <p class="eyebrow">TOTAL SCORE</p>
+          <h3 id="score-summary-title">合計得点</h3>
+        </div>
+        <span>単位：千点</span>
+      </div>
+      <div class="score-summary-list">
+        ${totals.map((player, index) => `
+          <article class="score-summary-player">
+            <span class="rank-badge">${index + 1}</span>
+            <span class="score-summary-name">${escapeHTML(player.name)}</span>
+            <strong class="${player.total < 0 ? "negative-score" : ""}">${formatScore(player.total)}</strong>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function getPlayerTotals() {
+  const totals = new Map();
+  for (const game of currentGames) {
+    for (const result of game.results) {
+      totals.set(result.playerName, (totals.get(result.playerName) ?? 0) + result.score);
+    }
+  }
+  return [...totals].map(([name, total]) => ({name, total}));
+}
+
+function formatScore(score) {
+  return `${score > 0 ? "+" : ""}${score.toLocaleString()}`;
+}
 function renderGamesTable() {
   const playerNames = [];
   for (const game of [...currentGames].reverse()) {
@@ -125,7 +160,7 @@ function renderGamesTable() {
               const result = game.results.find(item => item.playerName === name);
               return sum + (result?.score ?? 0);
             }, 0);
-            return `<td>${total.toLocaleString()}</td>`;
+            return `<td>${formatScore(total)}</td>`;
           }).join("")}
         </tr>
       </tfoot>
