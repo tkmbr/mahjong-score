@@ -117,6 +117,18 @@ function renderGamesTable() {
             </tr>`;
         }).join("")}
       </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">合計得点</th>
+          ${playerNames.map(name => {
+            const total = currentGames.reduce((sum, game) => {
+              const result = game.results.find(item => item.playerName === name);
+              return sum + (result?.score ?? 0);
+            }, 0);
+            return `<td>${total.toLocaleString()}</td>`;
+          }).join("")}
+        </tr>
+      </tfoot>
     </table>
     <p class="table-unit">単位：千点</p>`;
 }

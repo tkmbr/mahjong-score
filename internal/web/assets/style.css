@@ -73,6 +73,7 @@ th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: u
 .games-table tbody th { color: #17613f; background: #f7f5ee; }
 .games-table tbody tr:nth-child(even) td { background: #faf9f4; }
 .games-table tbody tr:hover td, .games-table tbody tr:hover th { background: #fff4d8; }
+.games-table tfoot th, .games-table tfoot td { color: #163c2a; background: #f2e6bd; border-top: 2px solid #d8a936; font-weight: 800; }
 .table-unit { margin: 10px 12px; color: #748078; font-size: .78rem; text-align: right; }
 .empty-state { padding: 30px; color: #748078; text-align: center; background: #f7f5ee; border-radius: 8px; }
 
