@@ -22,8 +22,12 @@ func NewHandler(repository domain.Repository) http.Handler {
 	mux.HandleFunc("GET /api/health", handler.health)
 	mux.HandleFunc("GET /api/sessions", handler.listSessions)
 	mux.HandleFunc("POST /api/sessions", handler.createSession)
+	mux.HandleFunc("PUT /api/sessions/{sessionID}", handler.updateSession)
+	mux.HandleFunc("DELETE /api/sessions/{sessionID}", handler.deleteSession)
 	mux.HandleFunc("GET /api/sessions/{sessionID}/games", handler.listGames)
 	mux.HandleFunc("POST /api/sessions/{sessionID}/games", handler.createGame)
+	mux.HandleFunc("PUT /api/sessions/{sessionID}/games/{gameID}", handler.updateGame)
+	mux.HandleFunc("DELETE /api/sessions/{sessionID}/games/{gameID}", handler.deleteGame)
 
 	static, err := fs.Sub(assets, "assets")
 	if err != nil {
@@ -47,6 +51,18 @@ func (h *Handler) listSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) createSession(w http.ResponseWriter, r *http.Request) {
+	h.saveSession(w, r, 0)
+}
+
+func (h *Handler) updateSession(w http.ResponseWriter, r *http.Request) {
+	sessionID, ok := positiveIDFromRequest(w, r, "sessionID", "対局日")
+	if !ok {
+		return
+	}
+	h.saveSession(w, r, sessionID)
+}
+
+func (h *Handler) saveSession(w http.ResponseWriter, r *http.Request, sessionID int64) {
 	var input struct {
 		Name     string `json:"name"`
 		PlayedAt string `json:"playedAt"`
@@ -66,12 +82,44 @@ func (h *Handler) createSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.repository.CreateSession(r.Context(), domain.Session{Name: input.Name, PlayedAt: playedAt})
+	session := domain.Session{ID: sessionID, Name: input.Name, PlayedAt: playedAt}
+	if sessionID > 0 {
+		found, err := h.repository.UpdateSession(r.Context(), session)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "対局日を更新できませんでした")
+			return
+		}
+		if !found {
+			writeError(w, http.StatusNotFound, "対局日が見つかりません")
+			return
+		}
+		writeJSON(w, http.StatusOK, session)
+		return
+	}
+
+	session, err = h.repository.CreateSession(r.Context(), session)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "対局日を保存できませんでした")
 		return
 	}
 	writeJSON(w, http.StatusCreated, session)
+}
+
+func (h *Handler) deleteSession(w http.ResponseWriter, r *http.Request) {
+	sessionID, ok := sessionIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+	found, err := h.repository.DeleteSession(r.Context(), sessionID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "対局日を削除できませんでした")
+		return
+	}
+	if !found {
+		writeError(w, http.StatusNotFound, "対局日が見つかりません")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) listGames(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +136,18 @@ func (h *Handler) listGames(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) createGame(w http.ResponseWriter, r *http.Request) {
+	h.saveGame(w, r, 0)
+}
+
+func (h *Handler) updateGame(w http.ResponseWriter, r *http.Request) {
+	gameID, ok := positiveIDFromRequest(w, r, "gameID", "半荘")
+	if !ok {
+		return
+	}
+	h.saveGame(w, r, gameID)
+}
+
+func (h *Handler) saveGame(w http.ResponseWriter, r *http.Request, gameID int64) {
 	sessionID, ok := sessionIDFromRequest(w, r)
 	if !ok {
 		return
@@ -104,7 +164,22 @@ func (h *Handler) createGame(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	game, err := h.repository.CreateGame(r.Context(), domain.Game{SessionID: sessionID, Results: results})
+	game := domain.Game{ID: gameID, SessionID: sessionID, Results: results}
+	if gameID > 0 {
+		found, err := h.repository.UpdateGame(r.Context(), game)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "半荘結果を更新できませんでした")
+			return
+		}
+		if !found {
+			writeError(w, http.StatusNotFound, "半荘結果が見つかりません")
+			return
+		}
+		writeJSON(w, http.StatusOK, game)
+		return
+	}
+
+	game, err = h.repository.CreateGame(r.Context(), game)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "半荘結果を保存できませんでした")
 		return
@@ -112,10 +187,35 @@ func (h *Handler) createGame(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, game)
 }
 
+func (h *Handler) deleteGame(w http.ResponseWriter, r *http.Request) {
+	sessionID, ok := sessionIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+	gameID, ok := positiveIDFromRequest(w, r, "gameID", "半荘")
+	if !ok {
+		return
+	}
+	found, err := h.repository.DeleteGame(r.Context(), sessionID, gameID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "半荘結果を削除できませんでした")
+		return
+	}
+	if !found {
+		writeError(w, http.StatusNotFound, "半荘結果が見つかりません")
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func sessionIDFromRequest(w http.ResponseWriter, r *http.Request) (int64, bool) {
-	id, err := strconv.ParseInt(r.PathValue("sessionID"), 10, 64)
+	return positiveIDFromRequest(w, r, "sessionID", "対局日")
+}
+
+func positiveIDFromRequest(w http.ResponseWriter, r *http.Request, key, label string) (int64, bool) {
+	id, err := strconv.ParseInt(r.PathValue(key), 10, 64)
 	if err != nil || id < 1 {
-		writeError(w, http.StatusBadRequest, "対局日IDが正しくありません")
+		writeError(w, http.StatusBadRequest, label+"IDが正しくありません")
 		return 0, false
 	}
 	return id, true

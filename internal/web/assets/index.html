@@ -21,6 +21,10 @@
       <select id="session-select">
         <option value="">対局日を選択してください</option>
       </select>
+      <div id="session-actions" class="record-actions" hidden>
+        <button id="edit-session-button" class="text-button" type="button">編集</button>
+        <button id="delete-session-button" class="danger-button" type="button">削除</button>
+      </div>
     </section>
 
     <section id="score-panel" class="panel" hidden>
@@ -43,7 +47,10 @@
         </div>
         <div class="form-footer">
           <p id="score-total">合計 0点</p>
-          <button class="primary-button" type="submit">半荘を保存</button>
+          <div class="form-actions">
+            <button id="cancel-game-edit" class="text-button" type="button" hidden>編集をキャンセル</button>
+            <button id="save-game-button" class="primary-button" type="submit">半荘を保存</button>
+          </div>
         </div>
         <p id="form-message" class="message" role="status"></p>
       </form>
@@ -71,13 +78,13 @@
   <dialog id="session-dialog">
     <form id="session-form">
       <div class="dialog-heading">
-        <h2>対局日を作成</h2>
+        <h2 id="session-dialog-title">対局日を作成</h2>
         <button id="close-dialog" class="icon-button" type="button" aria-label="閉じる">×</button>
       </div>
       <label>名前<input id="session-name" required placeholder="水曜セット"></label>
       <label>日付<input id="session-date" type="date" required></label>
       <p id="session-message" class="message" role="status"></p>
-      <button class="primary-button" type="submit">作成する</button>
+      <button id="save-session-button" class="primary-button" type="submit">作成する</button>
     </form>
   </dialog>
 

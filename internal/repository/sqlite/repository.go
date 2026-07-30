@@ -104,6 +104,27 @@ func (r *Repository) ListSessions(ctx context.Context) ([]domain.Session, error)
 	return sessions, rows.Err()
 }
 
+func (r *Repository) UpdateSession(ctx context.Context, session domain.Session) (bool, error) {
+	result, err := r.db.ExecContext(ctx,
+		`UPDATE sessions SET name = ?, played_at = ? WHERE id = ?`,
+		session.Name, session.PlayedAt.Format(time.RFC3339), session.ID,
+	)
+	if err != nil {
+		return false, err
+	}
+	affected, err := result.RowsAffected()
+	return affected > 0, err
+}
+
+func (r *Repository) DeleteSession(ctx context.Context, sessionID int64) (bool, error) {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE id = ?`, sessionID)
+	if err != nil {
+		return false, err
+	}
+	affected, err := result.RowsAffected()
+	return affected > 0, err
+}
+
 func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.Game, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -175,4 +196,49 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 		games[index].Results = append(games[index].Results, result)
 	}
 	return games, rows.Err()
+}
+
+func (r *Repository) UpdateGame(ctx context.Context, game domain.Game) (bool, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	var exists int
+	if err := tx.QueryRowContext(ctx,
+		`SELECT 1 FROM games WHERE id = ? AND session_id = ?`, game.ID, game.SessionID,
+	).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	if _, err := tx.ExecContext(ctx, `DELETE FROM game_results WHERE game_id = ?`, game.ID); err != nil {
+		return false, err
+	}
+	for position, result := range game.Results {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO game_results (game_id, position, player_name, score)
+			VALUES (?, ?, ?, ?)`,
+			game.ID, position, result.PlayerName, result.Score,
+		); err != nil {
+			return false, err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *Repository) DeleteGame(ctx context.Context, sessionID, gameID int64) (bool, error) {
+	result, err := r.db.ExecContext(ctx,
+		`DELETE FROM games WHERE id = ? AND session_id = ?`, gameID, sessionID,
+	)
+	if err != nil {
+		return false, err
+	}
+	affected, err := result.RowsAffected()
+	return affected > 0, err
 }

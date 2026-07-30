@@ -1,4 +1,5 @@
 const sessionSelect = document.querySelector("#session-select");
+const sessionActions = document.querySelector("#session-actions");
 const scorePanel = document.querySelector("#score-panel");
 const historyPanel = document.querySelector("#history-panel");
 const scoreForm = document.querySelector("#score-form");
@@ -9,7 +10,12 @@ const gamesContainer = document.querySelector("#games");
 const historyViewButtons = document.querySelectorAll("[data-history-view]");
 const dialog = document.querySelector("#session-dialog");
 const sessionForm = document.querySelector("#session-form");
+const saveGameButton = document.querySelector("#save-game-button");
+const cancelGameEditButton = document.querySelector("#cancel-game-edit");
+let currentSessions = [];
 let currentGames = [];
+let editingGameID = null;
+let editingSessionID = null;
 let historyView = localStorage.getItem("history-view") === "table" ? "table" : "tiles";
 
 for (let index = 0; index < 4; index += 1) {
@@ -26,15 +32,15 @@ async function api(path, options = {}) {
     ...options,
     headers: {"Content-Type": "application/json", ...options.headers},
   });
-  const body = await response.json();
+  const body = response.status === 204 ? null : await response.json();
   if (!response.ok) throw new Error(body.error || "通信に失敗しました");
   return body;
 }
 
 async function loadSessions(selectedID = "") {
-  const sessions = await api("/api/sessions");
+  currentSessions = await api("/api/sessions");
   sessionSelect.innerHTML = '<option value="">対局日を選択してください</option>';
-  for (const session of sessions) {
+  for (const session of currentSessions) {
     const option = document.createElement("option");
     option.value = session.id;
     option.textContent = `${session.name}（${session.playedAt.slice(0, 10)}）`;
@@ -50,6 +56,8 @@ async function selectSession() {
   const active = Boolean(sessionSelect.value);
   scorePanel.hidden = !active;
   historyPanel.hidden = !active;
+  sessionActions.hidden = !active;
+  cancelGameEdit();
   if (active) await loadGames();
 }
 
@@ -87,6 +95,10 @@ function renderGames() {
           </tr>`).join("")}
         </tbody>
       </table>
+      <div class="game-card-actions">
+        <button class="text-button" type="button" data-edit-game="${game.id}">編集</button>
+        <button class="danger-button" type="button" data-delete-game="${game.id}">削除</button>
+      </div>
     </article>`).join("");
 }
 
@@ -164,6 +176,7 @@ function renderGamesTable() {
           <th scope="col">回戦</th>
           <th scope="col">記録時刻</th>
           ${playerNames.map(name => `<th scope="col">${escapeHTML(name)}</th>`).join("")}
+          <th scope="col"><span class="visually-hidden">操作</span></th>
         </tr>
       </thead>
       <tbody>
@@ -177,6 +190,10 @@ function renderGamesTable() {
                 const score = scores.get(name);
                 return `<td>${score === undefined ? "—" : `<span class="score-value score-rank-${getScoreRank(game, score)}">${score.toLocaleString()}</span>`}</td>`;
               }).join("")}
+              <td class="actions-cell">
+                <button class="text-button" type="button" data-edit-game="${game.id}">編集</button>
+                <button class="danger-button" type="button" data-delete-game="${game.id}">削除</button>
+              </td>
             </tr>`;
         }).join("")}
       </tbody>
@@ -190,6 +207,7 @@ function renderGamesTable() {
             }, 0);
             return `<td>${formatScore(total)}</td>`;
           }).join("")}
+          <td></td>
         </tr>
       </tfoot>
     </table>
@@ -227,11 +245,64 @@ scoreForm.addEventListener("submit", async event => {
     score: Number(scoreForm.elements[`score-${index}`].value),
   }));
   try {
-    await api(`/api/sessions/${sessionSelect.value}/games`, {
-      method: "POST",
+    const path = editingGameID
+      ? `/api/sessions/${sessionSelect.value}/games/${editingGameID}`
+      : `/api/sessions/${sessionSelect.value}/games`;
+    await api(path, {
+      method: editingGameID ? "PUT" : "POST",
       body: JSON.stringify({results}),
     });
-    formMessage.textContent = "保存しました。";
+    formMessage.textContent = editingGameID ? "更新しました。" : "保存しました。";
+    cancelGameEdit(false);
+    await loadGames();
+  } catch (error) {
+    formMessage.textContent = error.message;
+  }
+});
+
+function startGameEdit(gameID) {
+  const game = currentGames.find(item => item.id === gameID);
+  if (!game) return;
+  editingGameID = gameID;
+  game.results.forEach((result, index) => {
+    scoreForm.elements[`player-${index}`].value = result.playerName;
+    scoreForm.elements[`score-${index}`].value = result.score;
+  });
+  saveGameButton.textContent = "変更を保存";
+  cancelGameEditButton.hidden = false;
+  formMessage.textContent = "";
+  updateTotal();
+  scorePanel.scrollIntoView({behavior: "smooth", block: "start"});
+}
+
+function cancelGameEdit(clearInputs = true) {
+  editingGameID = null;
+  saveGameButton.textContent = "半荘を保存";
+  cancelGameEditButton.hidden = true;
+  if (clearInputs) {
+    for (let index = 0; index < 4; index += 1) {
+      scoreForm.elements[`player-${index}`].value = "";
+      scoreForm.elements[`score-${index}`].value = "0";
+    }
+    formMessage.textContent = "";
+    updateTotal();
+  }
+}
+
+cancelGameEditButton.addEventListener("click", () => cancelGameEdit());
+gamesContainer.addEventListener("click", async event => {
+  const editButton = event.target.closest("[data-edit-game]");
+  if (editButton) {
+    startGameEdit(Number(editButton.dataset.editGame));
+    return;
+  }
+  const deleteButton = event.target.closest("[data-delete-game]");
+  if (!deleteButton) return;
+  const gameID = Number(deleteButton.dataset.deleteGame);
+  if (!confirm("この半荘結果を削除しますか？")) return;
+  try {
+    await api(`/api/sessions/${sessionSelect.value}/games/${gameID}`, {method: "DELETE"});
+    if (editingGameID === gameID) cancelGameEdit();
     await loadGames();
   } catch (error) {
     formMessage.textContent = error.message;
@@ -239,6 +310,10 @@ scoreForm.addEventListener("submit", async event => {
 });
 
 document.querySelector("#new-session-button").addEventListener("click", () => {
+  editingSessionID = null;
+  sessionForm.reset();
+  document.querySelector("#session-dialog-title").textContent = "対局日を作成";
+  document.querySelector("#save-session-button").textContent = "作成する";
   document.querySelector("#session-date").valueAsDate = new Date();
   dialog.showModal();
 });
@@ -250,8 +325,8 @@ sessionForm.addEventListener("submit", async event => {
   const message = document.querySelector("#session-message");
   message.textContent = "";
   try {
-    const session = await api("/api/sessions", {
-      method: "POST",
+    const session = await api(editingSessionID ? `/api/sessions/${editingSessionID}` : "/api/sessions", {
+      method: editingSessionID ? "PUT" : "POST",
       body: JSON.stringify({
         name: document.querySelector("#session-name").value,
         playedAt: document.querySelector("#session-date").value,
@@ -262,6 +337,33 @@ sessionForm.addEventListener("submit", async event => {
     await loadSessions(session.id);
   } catch (error) {
     message.textContent = error.message;
+  }
+});
+
+document.querySelector("#edit-session-button").addEventListener("click", () => {
+  const session = currentSessions.find(item => item.id === Number(sessionSelect.value));
+  if (!session) return;
+  editingSessionID = session.id;
+  document.querySelector("#session-name").value = session.name;
+  document.querySelector("#session-date").value = session.playedAt.slice(0, 10);
+  document.querySelector("#session-dialog-title").textContent = "対局日を編集";
+  document.querySelector("#save-session-button").textContent = "変更を保存";
+  document.querySelector("#session-message").textContent = "";
+  dialog.showModal();
+});
+
+document.querySelector("#delete-session-button").addEventListener("click", async () => {
+  const session = currentSessions.find(item => item.id === Number(sessionSelect.value));
+  if (!session || !confirm(`「${session.name}」と、その半荘結果をすべて削除しますか？`)) return;
+  try {
+    await api(`/api/sessions/${session.id}`, {method: "DELETE"});
+    sessionSelect.value = "";
+    scorePanel.hidden = true;
+    historyPanel.hidden = true;
+    sessionActions.hidden = true;
+    await loadSessions();
+  } catch (error) {
+    alert(error.message);
   }
 });
 
