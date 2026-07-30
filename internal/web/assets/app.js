@@ -180,8 +180,8 @@ function renderGamesTable() {
       <thead>
         <tr>
           <th scope="col">回戦</th>
-          <th scope="col">記録時刻</th>
           ${playerNames.map(name => `<th scope="col">${escapeHTML(name)}</th>`).join("")}
+          <th scope="col">記録時刻</th>
           <th scope="col"><span class="visually-hidden">操作</span></th>
         </tr>
       </thead>
@@ -191,11 +191,11 @@ function renderGamesTable() {
           return `
             <tr>
               <th scope="row">${gameIndex + 1}回戦</th>
-              <td>${renderGameTime(game.createdAt)}</td>
               ${playerNames.map(name => {
                 const score = scores.get(name);
                 return `<td>${score === undefined ? "—" : `<span class="score-value score-rank-${getScoreRank(game, score)}">${score.toLocaleString()}</span>`}</td>`;
               }).join("")}
+              <td>${renderGameTime(game.createdAt)}</td>
               <td class="actions-cell">
                 <button class="text-button" type="button" data-edit-game="${game.id}">編集</button>
                 <button class="danger-button" type="button" data-delete-game="${game.id}">削除</button>
@@ -205,7 +205,7 @@ function renderGamesTable() {
       </tbody>
       <tfoot>
         <tr>
-          <th scope="row" colspan="2">合計得点</th>
+          <th scope="row">合計得点</th>
           ${playerNames.map(name => {
             const total = currentGames.reduce((sum, game) => {
               const result = game.results.find(item => item.playerName === name);
@@ -213,6 +213,7 @@ function renderGamesTable() {
             }, 0);
             return `<td>${formatScore(total)}</td>`;
           }).join("")}
+          <td></td>
           <td></td>
         </tr>
       </tfoot>
