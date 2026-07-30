@@ -18,6 +18,7 @@ let currentSessions = [];
 let currentGames = [];
 let editingGameID = null;
 let editingSessionID = null;
+let playerNamesBeforeEdit = null;
 let historyView = localStorage.getItem("history-view") === "table" ? "table" : "tiles";
 
 for (let index = 0; index < 4; index += 1) {
@@ -242,6 +243,7 @@ scoreForm.addEventListener("input", updateTotal);
 scoreForm.addEventListener("submit", async event => {
   event.preventDefault();
   formMessage.textContent = "";
+  const wasEditing = editingGameID !== null;
   const results = Array.from({length: 4}, (_, index) => ({
     playerName: scoreForm.elements[`player-${index}`].value,
     score: Number(scoreForm.elements[`score-${index}`].value),
@@ -254,8 +256,8 @@ scoreForm.addEventListener("submit", async event => {
       method: editingGameID ? "PUT" : "POST",
       body: JSON.stringify({results}),
     });
-    formMessage.textContent = editingGameID ? "更新しました。" : "保存しました。";
-    cancelGameEdit(false);
+    if (wasEditing) cancelGameEdit();
+    formMessage.textContent = wasEditing ? "更新しました。" : "保存しました。";
     await loadGames();
   } catch (error) {
     formMessage.textContent = error.message;
@@ -265,6 +267,11 @@ scoreForm.addEventListener("submit", async event => {
 function startGameEdit(gameID) {
   const game = currentGames.find(item => item.id === gameID);
   if (!game) return;
+  if (editingGameID === null) {
+    playerNamesBeforeEdit = Array.from({length: 4}, (_, index) =>
+      scoreForm.elements[`player-${index}`].value
+    );
+  }
   editingGameID = gameID;
   scorePanel.classList.add("is-editing");
   scorePanelMode.textContent = "EDITING";
@@ -281,7 +288,9 @@ function startGameEdit(gameID) {
 }
 
 function cancelGameEdit(clearInputs = true) {
+  const namesToRestore = editingGameID !== null ? playerNamesBeforeEdit : null;
   editingGameID = null;
+  playerNamesBeforeEdit = null;
   scorePanel.classList.remove("is-editing");
   scorePanelMode.textContent = "NEW GAME";
   scorePanelTitle.textContent = "半荘結果を入力";
@@ -289,7 +298,7 @@ function cancelGameEdit(clearInputs = true) {
   cancelGameEditButton.hidden = true;
   if (clearInputs) {
     for (let index = 0; index < 4; index += 1) {
-      scoreForm.elements[`player-${index}`].value = "";
+      scoreForm.elements[`player-${index}`].value = namesToRestore?.[index] ?? "";
       scoreForm.elements[`score-${index}`].value = "0";
     }
     formMessage.textContent = "";
