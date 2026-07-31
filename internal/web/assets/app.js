@@ -22,7 +22,8 @@ let currentGames = [];
 let editingGameID = null;
 let editingSessionID = null;
 let playerNamesBeforeEdit = null;
-let historyView = localStorage.getItem("history-view") === "table" ? "table" : "tiles";
+const savedHistoryView = localStorage.getItem("history-view");
+let historyView = ["tiles", "table", "chart"].includes(savedHistoryView) ? savedHistoryView : "tiles";
 
 for (let index = 0; index < 4; index += 1) {
   scoreInputs.insertAdjacentHTML("beforeend", `
@@ -82,6 +83,10 @@ function renderGames() {
 
   if (historyView === "table") {
     renderGamesTable();
+    return;
+  }
+  if (historyView === "chart") {
+    renderGamesChart();
     return;
   }
 
@@ -219,6 +224,91 @@ function renderGamesTable() {
       </tfoot>
     </table>
     <p class="table-unit">単位：千点</p>`;
+}
+
+function renderGamesChart() {
+  const playerNames = [];
+  for (const game of currentGames) {
+    for (const result of game.results) {
+      if (!playerNames.includes(result.playerName)) playerNames.push(result.playerName);
+    }
+  }
+
+  const totals = new Map(playerNames.map(name => [name, 0]));
+  const series = new Map(playerNames.map(name => [name, [0]]));
+  for (const game of currentGames) {
+    for (const result of game.results) {
+      totals.set(result.playerName, totals.get(result.playerName) + result.score);
+    }
+    for (const name of playerNames) series.get(name).push(totals.get(name));
+  }
+
+  const width = 920;
+  const height = 430;
+  const padding = {top: 28, right: 32, bottom: 54, left: 66};
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const allScores = [...series.values()].flat();
+  const scoreMin = Math.min(0, ...allScores);
+  const scoreMax = Math.max(0, ...allScores);
+  const tickStep = getChartTickStep(scoreMax - scoreMin);
+  const yMin = Math.floor(scoreMin / tickStep) * tickStep;
+  const yMax = Math.ceil(scoreMax / tickStep) * tickStep || tickStep;
+  const x = round => padding.left + (round / currentGames.length) * plotWidth;
+  const y = score => padding.top + ((yMax - score) / (yMax - yMin)) * plotHeight;
+  const colors = ["#17613f", "#d97706", "#2563a8", "#b33b5c", "#7656a8", "#008b8b", "#8a5a2b", "#59645e"];
+  const yTicks = [];
+  for (let value = yMin; value <= yMax; value += tickStep) yTicks.push(value);
+
+  gamesContainer.className = "score-chart";
+  gamesContainer.innerHTML = `
+    <div class="score-chart-heading">
+      <div>
+        <p class="eyebrow">SCORE TREND</p>
+        <h3>累積得点の推移</h3>
+      </div>
+      <span>単位：千点</span>
+    </div>
+    <div class="score-chart-legend">
+      ${playerNames.map((name, index) => `
+        <span class="chart-legend-item">
+          <i style="--series-color: ${colors[index % colors.length]}"></i>
+          ${escapeHTML(name)}
+          <strong class="${totals.get(name) < 0 ? "negative-score" : ""}">${formatScore(totals.get(name))}</strong>
+        </span>`).join("")}
+    </div>
+    <div class="score-chart-scroll">
+      <svg class="score-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="score-chart-title score-chart-description">
+        <title id="score-chart-title">各プレイヤーの累積得点推移</title>
+        <desc id="score-chart-description">開始時点を0として、各回戦終了後の累積得点を折れ線で表示しています。</desc>
+        ${yTicks.map(value => `
+          <line class="chart-grid-line ${value === 0 ? "chart-zero-line" : ""}" x1="${padding.left}" y1="${y(value)}" x2="${width - padding.right}" y2="${y(value)}"></line>
+          <text class="chart-axis-label" x="${padding.left - 12}" y="${y(value) + 4}" text-anchor="end">${formatScore(value)}</text>`).join("")}
+        ${Array.from({length: currentGames.length + 1}, (_, round) => `
+          <line class="chart-x-tick" x1="${x(round)}" y1="${height - padding.bottom}" x2="${x(round)}" y2="${height - padding.bottom + 6}"></line>
+          <text class="chart-axis-label" x="${x(round)}" y="${height - padding.bottom + 24}" text-anchor="middle">${round === 0 ? "開始" : `${round}回`}</text>`).join("")}
+        ${playerNames.map((name, index) => {
+          const color = colors[index % colors.length];
+          const points = series.get(name);
+          const path = points.map((score, round) => `${round === 0 ? "M" : "L"} ${x(round)} ${y(score)}`).join(" ");
+          return `
+            <path class="chart-series-line" d="${path}" stroke="${color}"></path>
+            ${points.map((score, round) => `
+              <circle class="chart-series-point" cx="${x(round)}" cy="${y(score)}" r="4" fill="${color}">
+                <title>${escapeHTML(name)}：${round === 0 ? "開始" : `${round}回戦`} ${formatScore(score)}</title>
+              </circle>`).join("")}`;
+        }).join("")}
+      </svg>
+    </div>`;
+}
+
+function getChartTickStep(range) {
+  if (range <= 0) return 10;
+  const roughStep = range / 5;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return nice * magnitude;
 }
 
 function updateHistoryViewButtons() {
