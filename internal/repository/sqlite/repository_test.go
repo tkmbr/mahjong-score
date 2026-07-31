@@ -104,20 +104,22 @@ func TestImportSessions(t *testing.T) {
 	defer repository.Close()
 
 	createdAt := time.Date(2026, 7, 30, 14, 30, 0, 0, time.FixedZone("JST", 9*60*60))
+	laterCreatedAt := createdAt.Add(2 * time.Hour)
+	results := []domain.Result{
+		{PlayerName: "A", Score: 30},
+		{PlayerName: "B", Score: 10},
+		{PlayerName: "C", Score: -10},
+		{PlayerName: "D", Score: -30},
+	}
 	err = repository.ImportSessions(context.Background(), []domain.SessionWithGames{{
 		Session: domain.Session{
 			Name:     "インポート",
 			PlayedAt: time.Date(2026, 7, 30, 0, 0, 0, 0, time.UTC),
 		},
-		Games: []domain.Game{{
-			CreatedAt: createdAt,
-			Results: []domain.Result{
-				{PlayerName: "A", Score: 30},
-				{PlayerName: "B", Score: 10},
-				{PlayerName: "C", Score: -10},
-				{PlayerName: "D", Score: -30},
-			},
-		}},
+		Games: []domain.Game{
+			{CreatedAt: laterCreatedAt, Results: results},
+			{CreatedAt: createdAt, Results: results},
+		},
 	}})
 	if err != nil {
 		t.Fatal(err)
@@ -130,7 +132,10 @@ func TestImportSessions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(sessions) != 1 || len(games) != 1 || !games[0].CreatedAt.Equal(createdAt) {
+	if len(sessions) != 1 || len(games) != 2 || !games[0].CreatedAt.Equal(createdAt) || !games[1].CreatedAt.Equal(laterCreatedAt) {
 		t.Fatalf("imported sessions = %#v, games = %#v", sessions, games)
+	}
+	if games[0].ID >= games[1].ID {
+		t.Fatalf("imported game IDs = (%d, %d), want chronological IDs", games[0].ID, games[1].ID)
 	}
 }

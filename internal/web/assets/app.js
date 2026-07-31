@@ -86,7 +86,7 @@ function renderGames() {
   }
 
   gamesContainer.className = "games";
-  gamesContainer.innerHTML = renderScoreSummary() + [...currentGames].reverse().map((game, gameIndex) => `
+  gamesContainer.innerHTML = renderScoreSummary() + currentGames.map((game, gameIndex) => `
     <article class="game-card">
       <div class="game-card-heading">
         <h3>${gameIndex + 1}回戦</h3>
@@ -168,7 +168,7 @@ function renderGameTime(createdAt) {
 }
 function renderGamesTable() {
   const playerNames = [];
-  for (const game of [...currentGames].reverse()) {
+  for (const game of currentGames) {
     for (const result of game.results) {
       if (!playerNames.includes(result.playerName)) playerNames.push(result.playerName);
     }
@@ -186,7 +186,7 @@ function renderGamesTable() {
         </tr>
       </thead>
       <tbody>
-        ${[...currentGames].reverse().map((game, gameIndex) => {
+        ${currentGames.map((game, gameIndex) => {
           const scores = new Map(game.results.map(result => [result.playerName, result.score]));
           return `
             <tr>

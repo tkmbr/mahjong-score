@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/tkmbr/mahjong-score/internal/domain"
@@ -168,7 +169,7 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 		FROM games g
 		JOIN game_results r ON r.game_id = g.id
 		WHERE g.session_id = ?
-		ORDER BY g.id DESC, r.position ASC`, sessionID)
+		ORDER BY g.created_at ASC, g.id ASC, r.position ASC`, sessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -265,8 +266,11 @@ func (r *Repository) ImportSessions(ctx context.Context, sessions []domain.Sessi
 		if err != nil {
 			return err
 		}
-		for gameIndex := len(item.Games) - 1; gameIndex >= 0; gameIndex-- {
-			game := item.Games[gameIndex]
+		games := append([]domain.Game(nil), item.Games...)
+		sort.SliceStable(games, func(i, j int) bool {
+			return games[i].CreatedAt.Before(games[j].CreatedAt)
+		})
+		for _, game := range games {
 			gameResult, err := tx.ExecContext(ctx,
 				`INSERT INTO games (session_id, created_at) VALUES (?, ?)`,
 				sessionID, game.CreatedAt.Format(time.RFC3339),
