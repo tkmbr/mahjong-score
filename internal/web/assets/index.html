@@ -39,13 +39,16 @@
           <p id="score-panel-mode" class="eyebrow">NEW GAME</p>
           <h2 id="score-panel-title">半荘結果を入力</h2>
         </div>
-        <p class="rule-note">スコアは1000点単位で入力</p>
+        <p class="rule-note">スコアは1000点単位・サンマは1名空欄</p>
       </div>
 
       <form id="score-form">
         <div id="score-inputs" class="score-entry-grid"></div>
         <div class="form-footer">
-          <p id="score-total">合計 0点</p>
+          <div class="score-status">
+            <p id="score-total">合計 0点</p>
+            <span id="game-type-hint">4人麻雀として保存</span>
+          </div>
           <a class="history-hint" href="#history-panel">半荘履歴を見る <span aria-hidden="true">↓</span></a>
           <div class="form-actions">
             <button id="cancel-game-edit" class="text-button" type="button" hidden>編集をキャンセル</button>

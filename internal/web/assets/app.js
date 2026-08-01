@@ -10,6 +10,7 @@ const historyPanel = document.querySelector("#history-panel");
 const scoreForm = document.querySelector("#score-form");
 const scoreInputs = document.querySelector("#score-inputs");
 const scoreTotal = document.querySelector("#score-total");
+const gameTypeHint = document.querySelector("#game-type-hint");
 const formMessage = document.querySelector("#form-message");
 const gamesContainer = document.querySelector("#games");
 const historyViewButtons = document.querySelectorAll("[data-history-view]");
@@ -30,7 +31,7 @@ for (let index = 0; index < 4; index += 1) {
     <div class="score-entry">
       <label>
         <span>プレイヤー ${index + 1}</span>
-        <input name="player-${index}" autocomplete="off" required placeholder="名前">
+        <input name="player-${index}" autocomplete="off" placeholder="名前">
       </label>
       <label>
         <span>スコア</span>
@@ -335,8 +336,28 @@ for (const button of historyViewButtons) {
 function updateTotal() {
   const total = [...scoreForm.querySelectorAll('input[name^="score-"]')]
     .reduce((sum, input) => sum + Number(input.value || 0), 0);
+  const playerCount = Array.from({length: 4}, (_, index) =>
+    scoreForm.elements[`player-${index}`].value.trim()
+  ).filter(Boolean).length;
+  const blankPlayerHasScore = Array.from({length: 4}, (_, index) =>
+    !scoreForm.elements[`player-${index}`].value.trim()
+      && Number(scoreForm.elements[`score-${index}`].value || 0) !== 0
+  ).some(Boolean);
   scoreTotal.textContent = `合計 ${total.toLocaleString()}（千点）`;
   scoreTotal.classList.toggle("warning", total !== 0);
+  if (blankPlayerHasScore) {
+    gameTypeHint.textContent = "名前が空欄のスコアがあります";
+    gameTypeHint.classList.add("warning");
+  } else if (playerCount === 3) {
+    gameTypeHint.textContent = "3人麻雀として保存";
+    gameTypeHint.classList.remove("warning");
+  } else if (playerCount === 4) {
+    gameTypeHint.textContent = "4人麻雀として保存";
+    gameTypeHint.classList.remove("warning");
+  } else {
+    gameTypeHint.textContent = "3人または4人の名前を入力";
+    gameTypeHint.classList.add("warning");
+  }
 }
 
 scoreForm.addEventListener("input", updateTotal);
@@ -376,6 +397,10 @@ function startGameEdit(gameID) {
   scorePanel.classList.add("is-editing");
   scorePanelMode.textContent = "EDITING";
   scorePanelTitle.textContent = "半荘結果を編集中";
+  for (let index = 0; index < 4; index += 1) {
+    scoreForm.elements[`player-${index}`].value = "";
+    scoreForm.elements[`score-${index}`].value = "0";
+  }
   game.results.forEach((result, index) => {
     scoreForm.elements[`player-${index}`].value = result.playerName;
     scoreForm.elements[`score-${index}`].value = result.score;

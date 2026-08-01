@@ -8,24 +8,30 @@ import (
 )
 
 var (
-	ErrPlayerCount = errors.New("4人分の結果を入力してください")
-	ErrPlayerName  = errors.New("プレイヤー名を入力してください")
-	ErrScoreTotal  = errors.New("スコアの合計が0になるように入力してください")
+	ErrPlayerCount      = errors.New("3人または4人分の結果を入力してください")
+	ErrBlankPlayerScore = errors.New("名前が空欄のプレイヤーにはスコアを入力できません")
+	ErrScoreTotal       = errors.New("スコアの合計が0になるように入力してください")
 )
 
 func ValidateResults(input []domain.Result) ([]domain.Result, error) {
-	if len(input) != domain.PlayerCount {
+	results := make([]domain.Result, 0, domain.MaxPlayerCount)
+	for _, result := range input {
+		result.PlayerName = strings.TrimSpace(result.PlayerName)
+		if result.PlayerName == "" {
+			if result.Score != 0 {
+				return nil, ErrBlankPlayerScore
+			}
+			continue
+		}
+		results = append(results, result)
+	}
+	if len(results) < domain.MinPlayerCount || len(results) > domain.MaxPlayerCount {
 		return nil, ErrPlayerCount
 	}
 
-	results := append([]domain.Result(nil), input...)
-	seenNames := make(map[string]struct{}, domain.PlayerCount)
+	seenNames := make(map[string]struct{}, domain.MaxPlayerCount)
 	total := 0
 	for i := range results {
-		results[i].PlayerName = strings.TrimSpace(results[i].PlayerName)
-		if results[i].PlayerName == "" {
-			return nil, ErrPlayerName
-		}
 		if _, exists := seenNames[results[i].PlayerName]; exists {
 			return nil, errors.New("プレイヤー名が重複しています")
 		}

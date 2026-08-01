@@ -105,6 +105,9 @@ th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: u
 .score-entry input[name^="score-"] { text-align: right; font-variant-numeric: tabular-nums; }
 .form-footer { margin-top: 12px; }
 .form-footer p { margin: 0; font-variant-numeric: tabular-nums; }
+.score-status { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+#game-type-hint { color: #66736c; font-size: .78rem; font-weight: 700; }
+#game-type-hint.warning { color: #a13a24; }
 .history-hint { color: #17613f; font-size: .85rem; font-weight: 700; text-decoration: none; }
 .history-hint:hover { text-decoration: underline; }
 .history-hint span { display: inline-block; margin-left: 3px; }

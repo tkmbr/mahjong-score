@@ -39,6 +39,63 @@ func TestValidateResultsAllowsTies(t *testing.T) {
 	}
 }
 
+func TestValidateResultsAllowsThreePlayers(t *testing.T) {
+	input := []domain.Result{
+		{PlayerName: "A", Score: 35},
+		{PlayerName: "B", Score: 5},
+		{PlayerName: "C", Score: -40},
+	}
+
+	got, err := ValidateResults(input)
+	if err != nil {
+		t.Fatalf("ValidateResults returned error: %v", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("len(ValidateResults()) = %d, want 3", len(got))
+	}
+}
+
+func TestValidateResultsTreatsOneBlankPlayerAsThreePlayers(t *testing.T) {
+	input := []domain.Result{
+		{PlayerName: "A", Score: 35},
+		{PlayerName: "", Score: 0},
+		{PlayerName: "B", Score: 5},
+		{PlayerName: "C", Score: -40},
+	}
+
+	got, err := ValidateResults(input)
+	if err != nil {
+		t.Fatalf("ValidateResults returned error: %v", err)
+	}
+	if len(got) != 3 || got[1].PlayerName != "B" {
+		t.Fatalf("ValidateResults() = %#v, want blank player removed", got)
+	}
+}
+
+func TestValidateResultsRejectsScoreForBlankPlayer(t *testing.T) {
+	input := []domain.Result{
+		{PlayerName: "A", Score: 35},
+		{PlayerName: "B", Score: 5},
+		{PlayerName: "C", Score: -40},
+		{PlayerName: "", Score: 10},
+	}
+
+	if _, err := ValidateResults(input); err != ErrBlankPlayerScore {
+		t.Fatalf("ValidateResults error = %v, want %v", err, ErrBlankPlayerScore)
+	}
+}
+
+func TestValidateResultsRejectsFewerThanThreePlayers(t *testing.T) {
+	input := []domain.Result{
+		{PlayerName: "A", Score: 10},
+		{PlayerName: "B", Score: -10},
+	}
+
+	if _, err := ValidateResults(input); err != ErrPlayerCount {
+		t.Fatalf("ValidateResults error = %v, want %v", err, ErrPlayerCount)
+	}
+}
+
 func TestValidateResultsRejectsNonZeroTotal(t *testing.T) {
 	input := []domain.Result{
 		{PlayerName: "A", Score: 40},

@@ -2,7 +2,10 @@ package domain
 
 import "time"
 
-const PlayerCount = 4
+const (
+	MinPlayerCount = 3
+	MaxPlayerCount = 4
+)
 
 type Session struct {
 	ID       int64     `json:"id"`
