@@ -27,10 +27,16 @@ let historyView = ["tiles", "table", "chart"].includes(savedHistoryView) ? saved
 
 for (let index = 0; index < 4; index += 1) {
   scoreInputs.insertAdjacentHTML("beforeend", `
-    <tr>
-      <td><input name="player-${index}" autocomplete="off" required placeholder="プレイヤー ${index + 1}"></td>
-      <td><input name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="1000点単位のスコア"></td>
-    </tr>
+    <div class="score-entry">
+      <label>
+        <span>プレイヤー ${index + 1}</span>
+        <input name="player-${index}" autocomplete="off" required placeholder="名前">
+      </label>
+      <label>
+        <span>スコア</span>
+        <input name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="プレイヤー ${index + 1}の1000点単位のスコア">
+      </label>
+    </div>
   `);
 }
 

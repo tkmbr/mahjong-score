@@ -43,16 +43,10 @@
       </div>
 
       <form id="score-form">
-        <div class="score-table-wrap">
-          <table class="score-table">
-            <thead>
-              <tr><th>プレイヤー</th><th>スコア（千点）</th></tr>
-            </thead>
-            <tbody id="score-inputs"></tbody>
-          </table>
-        </div>
+        <div id="score-inputs" class="score-entry-grid"></div>
         <div class="form-footer">
           <p id="score-total">合計 0点</p>
+          <a class="history-hint" href="#history-panel">半荘履歴を見る <span aria-hidden="true">↓</span></a>
           <div class="form-actions">
             <button id="cancel-game-edit" class="text-button" type="button" hidden>編集をキャンセル</button>
             <button id="save-game-button" class="primary-button" type="submit">半荘を保存</button>

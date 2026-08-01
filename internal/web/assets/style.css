@@ -42,6 +42,8 @@ main { width: min(1080px, calc(100% - 32px)); margin: 32px auto 72px; }
 .backup-message.is-error { color: #812d1b; background: #f8e8e4; border-color: #e1b7ad; }
 .panel { padding: 24px; margin-bottom: 20px; background: #fffefa; border: 1px solid #ded9cb; border-radius: 10px; box-shadow: 0 8px 24px rgb(27 48 37 / 8%); }
 #score-panel { transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease; }
+#score-panel { padding-block: 18px; }
+#score-panel .panel-heading { margin-bottom: 14px; }
 #score-panel.is-editing {
   background: #fffaf0;
   border-color: #d8a936;
@@ -55,7 +57,7 @@ main { width: min(1080px, calc(100% - 32px)); margin: 32px auto 72px; }
   border-radius: 4px;
   letter-spacing: .14em;
 }
-#score-panel.is-editing .score-table input {
+#score-panel.is-editing .score-entry input {
   background: #fffdf8;
   border-color: #e4d5ad;
 }
@@ -96,10 +98,16 @@ button { padding: 10px 16px; border: 0; border-radius: 6px; cursor: pointer; fon
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #e5e2d9; }
 th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
-.score-table-wrap { overflow-x: auto; }
-.score-table input { min-width: 150px; border-color: transparent; background: #f7f5ee; }
-.form-footer { margin-top: 18px; }
+.score-entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.score-entry { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(80px, .65fr); gap: 8px; padding: 10px; background: #f7f5ee; border: 1px solid #e5e2d9; border-radius: 7px; }
+.score-entry label { display: grid; gap: 4px; min-width: 0; color: #637068; font-size: .72rem; font-weight: 700; }
+.score-entry input { min-width: 0; padding: 8px; border-color: transparent; font-size: .92rem; }
+.score-entry input[name^="score-"] { text-align: right; font-variant-numeric: tabular-nums; }
+.form-footer { margin-top: 12px; }
 .form-footer p { margin: 0; font-variant-numeric: tabular-nums; }
+.history-hint { color: #17613f; font-size: .85rem; font-weight: 700; text-decoration: none; }
+.history-hint:hover { text-decoration: underline; }
+.history-hint span { display: inline-block; margin-left: 3px; }
 .warning { color: #a13a24; font-weight: 700; }
 .message { min-height: 1.5em; margin: 12px 0 0; color: #a13a24; }
 
@@ -168,10 +176,15 @@ dialog label { display: grid; gap: 7px; font-weight: 700; }
   .view-switcher { align-self: stretch; }
   .view-button { flex: 1; justify-content: center; }
   .score-summary-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .score-entry-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .score-entry { grid-template-columns: 1fr; }
+  .form-footer { align-items: stretch; flex-direction: column; }
+  .history-hint { order: 3; text-align: center; }
   .panel { padding: 18px; }
 }
 
 
 @media (max-width: 400px) {
   .score-summary-list { grid-template-columns: 1fr; }
+  .score-entry-grid { grid-template-columns: 1fr; }
 }
