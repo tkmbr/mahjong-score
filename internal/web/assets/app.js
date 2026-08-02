@@ -18,11 +18,15 @@ const dialog = document.querySelector("#session-dialog");
 const sessionForm = document.querySelector("#session-form");
 const saveGameButton = document.querySelector("#save-game-button");
 const cancelGameEditButton = document.querySelector("#cancel-game-edit");
+const ruleCitationSelect = document.querySelector("#rule-citation-select");
+const ruleRepository = "tkmbr/mahjong-rule";
+const ruleCitations = new Map();
 let currentSessions = [];
 let currentGames = [];
 let editingGameID = null;
 let editingSessionID = null;
 let playerNamesBeforeEdit = null;
+let ruleCitationBeforeEdit = null;
 const savedHistoryView = localStorage.getItem("history-view");
 let historyView = ["tiles", "table", "chart"].includes(savedHistoryView) ? savedHistoryView : "tiles";
 
@@ -40,6 +44,12 @@ for (let index = 0; index < 4; index += 1) {
     </div>
   `);
 }
+
+addRuleCitationOption({
+  revision: "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+  path: "5等サンマ/rule.pdf",
+  title: "5等サンマ",
+});
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -77,6 +87,7 @@ async function selectSession() {
 
 async function loadGames() {
   currentGames = await api(`/api/sessions/${sessionSelect.value}/games`);
+  for (const game of currentGames) addRuleCitationOption(game.ruleCitation);
   renderGames();
 }
 
@@ -102,7 +113,10 @@ function renderGames() {
     <article class="game-card">
       <div class="game-card-heading">
         <h3>${gameIndex + 1}回戦</h3>
-        ${renderGameTime(game.createdAt)}
+        <div class="game-card-meta">
+          ${renderRuleCitation(game.ruleCitation)}
+          ${renderGameTime(game.createdAt)}
+        </div>
       </div>
       <table>
         <thead><tr><th>プレイヤー</th><th>スコア（千点）</th></tr></thead>
@@ -178,6 +192,28 @@ function renderGameTime(createdAt) {
   }).format(date);
   return `<time class="game-time" datetime="${escapeHTML(createdAt)}" title="${escapeHTML(fullDate)}">${time}</time>`;
 }
+function ruleCitationKey(citation) {
+  return citation ? `${citation.revision}:${citation.path}` : "";
+}
+
+function addRuleCitationOption(citation) {
+  const key = ruleCitationKey(citation);
+  if (!key || ruleCitations.has(key)) return key;
+  ruleCitations.set(key, citation);
+  const option = document.createElement("option");
+  option.value = key;
+  option.textContent = citation.title;
+  ruleCitationSelect.append(option);
+  return key;
+}
+
+function renderRuleCitation(citation, empty = "") {
+  if (!citation) return empty;
+  const encodedPath = citation.path.split("/").map(encodeURIComponent).join("/");
+  const url = `https://github.com/${ruleRepository}/blob/${encodeURIComponent(citation.revision)}/${encodedPath}`;
+  return `<a class="rule-citation" href="${escapeHTML(url)}" target="_blank" rel="noopener">${escapeHTML(citation.title)}</a>`;
+}
+
 function renderGamesTable() {
   const playerNames = [];
   for (const game of currentGames) {
@@ -192,6 +228,7 @@ function renderGamesTable() {
       <thead>
         <tr>
           <th scope="col">回戦</th>
+          <th scope="col">ルール</th>
           ${playerNames.map(name => `<th scope="col">${escapeHTML(name)}</th>`).join("")}
           <th scope="col">記録時刻</th>
           <th scope="col"><span class="visually-hidden">操作</span></th>
@@ -203,6 +240,7 @@ function renderGamesTable() {
           return `
             <tr>
               <th scope="row">${gameIndex + 1}回戦</th>
+              <td>${renderRuleCitation(game.ruleCitation, "—")}</td>
               ${playerNames.map(name => {
                 const score = scores.get(name);
                 return `<td>${score === undefined ? "—" : `<span class="score-value score-rank-${getScoreRank(game, score)}">${score.toLocaleString()}</span>`}</td>`;
@@ -218,6 +256,7 @@ function renderGamesTable() {
       <tfoot>
         <tr>
           <th scope="row">合計得点</th>
+          <td></td>
           ${playerNames.map(name => {
             const total = currentGames.reduce((sum, game) => {
               const result = game.results.find(item => item.playerName === name);
@@ -369,13 +408,14 @@ scoreForm.addEventListener("submit", async event => {
     playerName: scoreForm.elements[`player-${index}`].value,
     score: Number(scoreForm.elements[`score-${index}`].value),
   }));
+  const ruleCitation = ruleCitations.get(ruleCitationSelect.value) ?? null;
   try {
     const path = editingGameID
       ? `/api/sessions/${sessionSelect.value}/games/${editingGameID}`
       : `/api/sessions/${sessionSelect.value}/games`;
     await api(path, {
       method: editingGameID ? "PUT" : "POST",
-      body: JSON.stringify({results}),
+      body: JSON.stringify({ruleCitation, results}),
     });
     if (wasEditing) cancelGameEdit();
     formMessage.textContent = wasEditing ? "更新しました。" : "保存しました。";
@@ -392,6 +432,7 @@ function startGameEdit(gameID) {
     playerNamesBeforeEdit = Array.from({length: 4}, (_, index) =>
       scoreForm.elements[`player-${index}`].value
     );
+    ruleCitationBeforeEdit = ruleCitationSelect.value;
   }
   editingGameID = gameID;
   scorePanel.classList.add("is-editing");
@@ -405,6 +446,7 @@ function startGameEdit(gameID) {
     scoreForm.elements[`player-${index}`].value = result.playerName;
     scoreForm.elements[`score-${index}`].value = result.score;
   });
+  ruleCitationSelect.value = addRuleCitationOption(game.ruleCitation);
   saveGameButton.textContent = "変更を保存";
   cancelGameEditButton.hidden = false;
   formMessage.textContent = "";
@@ -426,6 +468,8 @@ function cancelGameEdit(clearInputs = true) {
       scoreForm.elements[`player-${index}`].value = namesToRestore?.[index] ?? "";
       scoreForm.elements[`score-${index}`].value = "0";
     }
+    ruleCitationSelect.value = ruleCitationBeforeEdit ?? "";
+    ruleCitationBeforeEdit = null;
     formMessage.textContent = "";
     updateTotal();
   }

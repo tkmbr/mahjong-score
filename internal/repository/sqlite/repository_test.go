@@ -44,6 +44,11 @@ func TestUpdateAndDeleteRecords(t *testing.T) {
 	}
 	game.Results[0].Score = 40
 	game.Results[1].Score = 0
+	game.RuleCitation = &domain.RuleCitation{
+		Revision: "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+		Path:     "5等サンマ/rule.pdf",
+		Title:    "5等サンマ",
+	}
 	if found, err := repository.UpdateGame(ctx, game); err != nil || !found {
 		t.Fatalf("UpdateGame() = (%v, %v), want (true, nil)", found, err)
 	}
@@ -52,7 +57,7 @@ func TestUpdateAndDeleteRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(games) != 1 || games[0].Results[0].Score != 40 {
+	if len(games) != 1 || games[0].Results[0].Score != 40 || games[0].RuleCitation == nil || games[0].RuleCitation.Title != "5等サンマ" {
 		t.Fatalf("ListGames() after update = %#v", games)
 	}
 	if found, err := repository.DeleteGame(ctx, session.ID+1, game.ID); err != nil || found {
@@ -111,13 +116,18 @@ func TestImportSessions(t *testing.T) {
 		{PlayerName: "C", Score: -10},
 		{PlayerName: "D", Score: -30},
 	}
+	citation := &domain.RuleCitation{
+		Revision: "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+		Path:     "5等サンマ/rule.pdf",
+		Title:    "5等サンマ",
+	}
 	err = repository.ImportSessions(context.Background(), []domain.SessionWithGames{{
 		Session: domain.Session{
 			Name:     "インポート",
 			PlayedAt: time.Date(2026, 7, 30, 0, 0, 0, 0, time.UTC),
 		},
 		Games: []domain.Game{
-			{CreatedAt: laterCreatedAt, Results: results},
+			{RuleCitation: citation, CreatedAt: laterCreatedAt, Results: results},
 			{CreatedAt: createdAt, Results: results},
 		},
 	}})
@@ -137,5 +147,8 @@ func TestImportSessions(t *testing.T) {
 	}
 	if games[0].ID >= games[1].ID {
 		t.Fatalf("imported game IDs = (%d, %d), want chronological IDs", games[0].ID, games[1].ID)
+	}
+	if games[0].RuleCitation != nil || games[1].RuleCitation == nil || games[1].RuleCitation.Title != "5等サンマ" {
+		t.Fatalf("imported rule citations = (%#v, %#v)", games[0].RuleCitation, games[1].RuleCitation)
 	}
 }

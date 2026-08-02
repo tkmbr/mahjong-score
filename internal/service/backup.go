@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	BackupFormat  = "mahjong-score"
-	BackupVersion = 1
+	BackupFormat         = "mahjong-score"
+	BackupVersion        = 2
+	MinimumBackupVersion = 1
 )
 
 type Backup struct {
@@ -28,15 +29,16 @@ type BackupSession struct {
 }
 
 type BackupGame struct {
-	CreatedAt time.Time       `json:"createdAt"`
-	Results   []domain.Result `json:"results"`
+	RuleCitation *domain.RuleCitation `json:"ruleCitation,omitempty"`
+	CreatedAt    time.Time            `json:"createdAt"`
+	Results      []domain.Result      `json:"results"`
 }
 
 func ValidateBackup(backup Backup) ([]domain.SessionWithGames, error) {
 	if backup.Format != BackupFormat {
 		return nil, errors.New("Mahjong Scoreのバックアップファイルではありません")
 	}
-	if backup.Version != BackupVersion {
+	if backup.Version < MinimumBackupVersion || backup.Version > BackupVersion {
 		return nil, fmt.Errorf("対応していないバックアップバージョンです: %d", backup.Version)
 	}
 	if len(backup.Sessions) > 10000 {
@@ -71,9 +73,14 @@ func ValidateBackup(backup Backup) ([]domain.SessionWithGames, error) {
 			if err != nil {
 				return nil, fmt.Errorf("%d件目の対局日の%d件目の半荘結果: %w", sessionIndex+1, gameIndex+1, err)
 			}
+			citation, err := ValidateRuleCitation(inputGame.RuleCitation)
+			if err != nil {
+				return nil, fmt.Errorf("%d件目の対局日の%d件目のルール引用: %w", sessionIndex+1, gameIndex+1, err)
+			}
 			item.Games = append(item.Games, domain.Game{
-				CreatedAt: inputGame.CreatedAt,
-				Results:   results,
+				RuleCitation: citation,
+				CreatedAt:    inputGame.CreatedAt,
+				Results:      results,
 			})
 		}
 		sessions = append(sessions, item)

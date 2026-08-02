@@ -69,8 +69,9 @@ func (h *Handler) exportData(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, game := range games {
 			exportSession.Games = append(exportSession.Games, service.BackupGame{
-				CreatedAt: game.CreatedAt,
-				Results:   game.Results,
+				RuleCitation: game.RuleCitation,
+				CreatedAt:    game.CreatedAt,
+				Results:      game.Results,
 			})
 		}
 		backup.Sessions = append(backup.Sessions, exportSession)
@@ -224,7 +225,8 @@ func (h *Handler) saveGame(w http.ResponseWriter, r *http.Request, gameID int64)
 		return
 	}
 	var input struct {
-		Results []domain.Result `json:"results"`
+		RuleCitation *domain.RuleCitation `json:"ruleCitation"`
+		Results      []domain.Result      `json:"results"`
 	}
 	if err := decodeJSON(w, r, &input); err != nil {
 		writeError(w, http.StatusBadRequest, "入力形式が正しくありません")
@@ -235,7 +237,12 @@ func (h *Handler) saveGame(w http.ResponseWriter, r *http.Request, gameID int64)
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	game := domain.Game{ID: gameID, SessionID: sessionID, Results: results}
+	citation, err := service.ValidateRuleCitation(input.RuleCitation)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	game := domain.Game{ID: gameID, SessionID: sessionID, RuleCitation: citation, Results: results}
 	if gameID > 0 {
 		found, err := h.repository.UpdateGame(r.Context(), game)
 		if err != nil {

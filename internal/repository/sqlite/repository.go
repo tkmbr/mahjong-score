@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS games (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+	rule_revision TEXT,
+	rule_path TEXT,
+	rule_title TEXT,
 	created_at TEXT NOT NULL
 );
 
@@ -134,9 +137,10 @@ func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.G
 	defer tx.Rollback()
 
 	game.CreatedAt = time.Now()
+	revision, rulePath, title := citationValues(game.RuleCitation)
 	result, err := tx.ExecContext(ctx,
-		`INSERT INTO games (session_id, created_at) VALUES (?, ?)`,
-		game.SessionID, game.CreatedAt.Format(time.RFC3339),
+		`INSERT INTO games (session_id, rule_revision, rule_path, rule_title, created_at) VALUES (?, ?, ?, ?, ?)`,
+		game.SessionID, revision, rulePath, title, game.CreatedAt.Format(time.RFC3339),
 	)
 	if err != nil {
 		return domain.Game{}, err
@@ -165,7 +169,7 @@ func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.G
 
 func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.Game, error) {
 	rows, err := r.db.QueryContext(ctx, `
-		SELECT g.id, g.created_at, r.player_name, r.score
+		SELECT g.id, g.created_at, g.rule_revision, g.rule_path, g.rule_title, r.player_name, r.score
 		FROM games g
 		JOIN game_results r ON r.game_id = g.id
 		WHERE g.session_id = ?
@@ -180,8 +184,9 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 	for rows.Next() {
 		var gameID int64
 		var createdAt string
+		var revision, rulePath, title sql.NullString
 		var result domain.Result
-		if err := rows.Scan(&gameID, &createdAt, &result.PlayerName, &result.Score); err != nil {
+		if err := rows.Scan(&gameID, &createdAt, &revision, &rulePath, &title, &result.PlayerName, &result.Score); err != nil {
 			return nil, err
 		}
 		index, exists := indexByID[gameID]
@@ -192,7 +197,12 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 			}
 			index = len(games)
 			indexByID[gameID] = index
-			games = append(games, domain.Game{ID: gameID, SessionID: sessionID, CreatedAt: parsed})
+			games = append(games, domain.Game{
+				ID:           gameID,
+				SessionID:    sessionID,
+				RuleCitation: citationFromValues(revision, rulePath, title),
+				CreatedAt:    parsed,
+			})
 		}
 		games[index].Results = append(games[index].Results, result)
 	}
@@ -216,6 +226,14 @@ func (r *Repository) UpdateGame(ctx context.Context, game domain.Game) (bool, er
 		return false, err
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM game_results WHERE game_id = ?`, game.ID); err != nil {
+		return false, err
+	}
+	revision, rulePath, title := citationValues(game.RuleCitation)
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE games SET rule_revision = ?, rule_path = ?, rule_title = ?
+		WHERE id = ? AND session_id = ?`,
+		revision, rulePath, title, game.ID, game.SessionID,
+	); err != nil {
 		return false, err
 	}
 	for position, result := range game.Results {
@@ -271,9 +289,10 @@ func (r *Repository) ImportSessions(ctx context.Context, sessions []domain.Sessi
 			return games[i].CreatedAt.Before(games[j].CreatedAt)
 		})
 		for _, game := range games {
+			revision, rulePath, title := citationValues(game.RuleCitation)
 			gameResult, err := tx.ExecContext(ctx,
-				`INSERT INTO games (session_id, created_at) VALUES (?, ?)`,
-				sessionID, game.CreatedAt.Format(time.RFC3339),
+				`INSERT INTO games (session_id, rule_revision, rule_path, rule_title, created_at) VALUES (?, ?, ?, ?, ?)`,
+				sessionID, revision, rulePath, title, game.CreatedAt.Format(time.RFC3339),
 			)
 			if err != nil {
 				return err
@@ -294,4 +313,22 @@ func (r *Repository) ImportSessions(ctx context.Context, sessions []domain.Sessi
 		}
 	}
 	return tx.Commit()
+}
+
+func citationValues(citation *domain.RuleCitation) (revision, rulePath, title any) {
+	if citation == nil {
+		return nil, nil, nil
+	}
+	return citation.Revision, citation.Path, citation.Title
+}
+
+func citationFromValues(revision, rulePath, title sql.NullString) *domain.RuleCitation {
+	if !revision.Valid && !rulePath.Valid && !title.Valid {
+		return nil
+	}
+	return &domain.RuleCitation{
+		Revision: revision.String,
+		Path:     rulePath.String,
+		Title:    title.String,
+	}
 }
