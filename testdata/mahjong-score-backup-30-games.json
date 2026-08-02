@@ -1,30 +1,31 @@
 {
   "format": "mahjong-score",
-  "version": 1,
+  "version": 2,
   "exportedAt": "2026-08-01T23:00:00+09:00",
   "sessions": [
     {
-      "name": "得点推移テスト（30半荘）",
+      "name": "得点推移テスト（サンマ・ヨンマ混在30半荘）",
       "playedAt": "2026-08-01",
       "games": [
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T08:00:00+09:00",
           "results": [
             {
-              "playerName": "健太",
+              "playerName": "あかり",
               "score": -25
             },
             {
-              "playerName": "美咲",
+              "playerName": "健太",
               "score": -19
             },
             {
-              "playerName": "翔",
-              "score": -21
-            },
-            {
-              "playerName": "蓮",
-              "score": 65
+              "playerName": "美咲",
+              "score": 44
             }
           ]
         },
@@ -50,23 +51,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T09:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "美咲",
               "score": 9
             },
             {
-              "playerName": "健太",
+              "playerName": "翔",
               "score": -28
             },
             {
-              "playerName": "翔",
-              "score": -6
-            },
-            {
               "playerName": "蓮",
-              "score": 25
+              "score": 19
             }
           ]
         },
@@ -92,23 +94,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T10:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "蓮",
               "score": -18
             },
             {
-              "playerName": "健太",
+              "playerName": "あかり",
               "score": 30
             },
             {
-              "playerName": "美咲",
-              "score": 9
-            },
-            {
-              "playerName": "翔",
-              "score": -21
+              "playerName": "健太",
+              "score": -12
             }
           ]
         },
@@ -134,10 +137,15 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T11:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "健太",
               "score": 16
             },
             {
@@ -146,11 +154,7 @@
             },
             {
               "playerName": "翔",
-              "score": 24
-            },
-            {
-              "playerName": "蓮",
-              "score": -61
+              "score": -37
             }
           ]
         },
@@ -176,23 +180,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T12:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "翔",
               "score": -11
             },
             {
-              "playerName": "健太",
+              "playerName": "蓮",
               "score": 12
             },
             {
-              "playerName": "美咲",
-              "score": -20
-            },
-            {
-              "playerName": "蓮",
-              "score": 19
+              "playerName": "あかり",
+              "score": -1
             }
           ]
         },
@@ -218,23 +223,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T13:00:00+09:00",
           "results": [
             {
-              "playerName": "健太",
+              "playerName": "あかり",
               "score": 23
             },
             {
-              "playerName": "美咲",
+              "playerName": "健太",
               "score": 3
             },
             {
-              "playerName": "翔",
-              "score": -5
-            },
-            {
-              "playerName": "蓮",
-              "score": -21
+              "playerName": "美咲",
+              "score": -26
             }
           ]
         },
@@ -260,23 +266,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T14:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "美咲",
               "score": -4
             },
             {
-              "playerName": "健太",
+              "playerName": "翔",
               "score": -6
             },
             {
-              "playerName": "翔",
-              "score": 10
-            },
-            {
               "playerName": "蓮",
-              "score": 0
+              "score": 10
             }
           ]
         },
@@ -302,23 +309,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T15:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "蓮",
               "score": 30
+            },
+            {
+              "playerName": "あかり",
+              "score": -15
             },
             {
               "playerName": "健太",
               "score": -15
-            },
-            {
-              "playerName": "美咲",
-              "score": 25
-            },
-            {
-              "playerName": "翔",
-              "score": -40
             }
           ]
         },
@@ -344,10 +352,15 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T16:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "健太",
               "score": 3
             },
             {
@@ -356,11 +369,7 @@
             },
             {
               "playerName": "翔",
-              "score": -19
-            },
-            {
-              "playerName": "蓮",
-              "score": 40
+              "score": 21
             }
           ]
         },
@@ -386,23 +395,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T17:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "翔",
               "score": -24
             },
             {
-              "playerName": "健太",
+              "playerName": "蓮",
               "score": 34
             },
             {
-              "playerName": "美咲",
-              "score": -4
-            },
-            {
-              "playerName": "蓮",
-              "score": -6
+              "playerName": "あかり",
+              "score": -10
             }
           ]
         },
@@ -428,23 +438,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T18:00:00+09:00",
           "results": [
             {
-              "playerName": "健太",
+              "playerName": "あかり",
               "score": 10
             },
             {
-              "playerName": "美咲",
+              "playerName": "健太",
               "score": 25
             },
             {
-              "playerName": "翔",
-              "score": 11
-            },
-            {
-              "playerName": "蓮",
-              "score": -46
+              "playerName": "美咲",
+              "score": -35
             }
           ]
         },
@@ -470,23 +481,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T19:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "美咲",
               "score": -17
             },
             {
-              "playerName": "健太",
+              "playerName": "翔",
               "score": 16
             },
             {
-              "playerName": "翔",
-              "score": 26
-            },
-            {
               "playerName": "蓮",
-              "score": -25
+              "score": 1
             }
           ]
         },
@@ -512,23 +524,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T20:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "蓮",
               "score": 17
             },
             {
-              "playerName": "健太",
+              "playerName": "あかり",
               "score": 7
             },
             {
-              "playerName": "美咲",
-              "score": -18
-            },
-            {
-              "playerName": "翔",
-              "score": -6
+              "playerName": "健太",
+              "score": -24
             }
           ]
         },
@@ -554,10 +567,15 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T21:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "健太",
               "score": -10
             },
             {
@@ -566,11 +584,7 @@
             },
             {
               "playerName": "翔",
-              "score": -3
-            },
-            {
-              "playerName": "蓮",
-              "score": 15
+              "score": 12
             }
           ]
         },
@@ -596,23 +610,24 @@
           ]
         },
         {
+          "ruleCitation": {
+            "revision": "8baf4cb3b3861d89badfd53424a6d5cce73e904e",
+            "path": "5等サンマ/rule.pdf",
+            "title": "5等サンマ"
+          },
           "createdAt": "2026-08-01T22:00:00+09:00",
           "results": [
             {
-              "playerName": "あかり",
+              "playerName": "翔",
               "score": 24
             },
             {
-              "playerName": "健太",
+              "playerName": "蓮",
               "score": -11
             },
             {
-              "playerName": "美咲",
-              "score": 12
-            },
-            {
-              "playerName": "蓮",
-              "score": -25
+              "playerName": "あかり",
+              "score": -13
             }
           ]
         },
