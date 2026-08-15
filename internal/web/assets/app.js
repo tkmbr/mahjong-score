@@ -44,7 +44,7 @@ for (let index = 0; index < 4; index += 1) {
         <span>スコア</span>
         <div class="score-input-group">
           <input id="score-${index}" name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="プレイヤー ${index + 1}の1000点単位のスコア">
-          <button type="button" class="score-sign-button" data-score-sign="${index}" aria-controls="score-${index}" aria-label="プレイヤー ${index + 1}のスコアのプラスとマイナスを切り替える">±</button>
+          <button type="button" class="score-sign-button" data-score-sign="${index}" tabindex="-1" aria-controls="score-${index}" aria-label="プレイヤー ${index + 1}のスコアのプラスとマイナスを切り替える">±</button>
         </div>
       </div>
     </div>
@@ -420,6 +420,16 @@ function updateCopyLatestGameButton() {
 }
 
 scoreForm.addEventListener("input", updateTotal);
+scoreInputs.addEventListener("keydown", event => {
+  if (event.key !== "Tab" || !event.target.matches('input[name^="score-"]')) return;
+  const inputs = [...scoreInputs.querySelectorAll('input[name^="score-"]')];
+  const currentIndex = inputs.indexOf(event.target);
+  const nextIndex = currentIndex + (event.shiftKey ? -1 : 1);
+  if (nextIndex < 0 || nextIndex >= inputs.length) return;
+  event.preventDefault();
+  inputs[nextIndex].focus();
+  inputs[nextIndex].select();
+});
 scoreInputs.addEventListener("click", event => {
   const signButton = event.target.closest("[data-score-sign]");
   if (!signButton) return;
