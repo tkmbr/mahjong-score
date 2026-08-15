@@ -420,6 +420,11 @@ function updateCopyLatestGameButton() {
 }
 
 scoreForm.addEventListener("input", updateTotal);
+scoreInputs.addEventListener("pointerup", event => {
+  if (event.pointerType !== "touch" || !event.target.matches('input[name^="score-"]')) return;
+  const input = event.target;
+  setTimeout(() => input.select(), 0);
+});
 scoreInputs.addEventListener("keydown", event => {
   if (event.key !== "Tab" || !event.target.matches('input[name^="score-"]')) return;
   const inputs = [...scoreInputs.querySelectorAll('input[name^="score-"]')];
