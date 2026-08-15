@@ -102,7 +102,7 @@ table { width: 100%; border-collapse: collapse; }
 th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #e5e2d9; }
 th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
 .score-entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.score-entry { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(80px, .65fr); gap: 8px; padding: 10px; background: #f7f5ee; border: 1px solid #e5e2d9; border-radius: 7px; }
+.score-entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, .75fr); gap: 8px; padding: 10px; background: #f7f5ee; border: 1px solid #e5e2d9; border-radius: 7px; }
 .score-entry label, .score-field { display: grid; gap: 4px; min-width: 0; color: #637068; font-size: .72rem; font-weight: 700; }
 .score-entry input { min-width: 0; padding: 8px; border-color: transparent; font-size: .92rem; }
 .score-entry input[name^="score-"] { text-align: right; font-variant-numeric: tabular-nums; }
