@@ -22,6 +22,141 @@ wsl docker compose up --build
 
 ブラウザで <http://localhost:8080> を開きます。SQLiteデータはDockerボリュームに保存されます。
 
+## Tailscale経由で共有する
+
+インターネットへ直接公開せず、招待したTailscaleユーザーだけに共有する場合の手順です。
+閲覧者にもTailscaleアカウントとTailscaleクライアントが必要です。
+
+### 1. Tailscale Serveを開始する
+
+アプリを`localhost:8080`で起動した状態で、アプリを実行しているマシン上から次を実行します。
+
+```bash
+tailscale serve --bg 8080
+```
+
+設定を確認します。
+
+```bash
+tailscale serve status
+```
+
+次のように表示されれば、TailscaleがHTTPSの443番ポートで受けた通信を
+`127.0.0.1:8080`へ転送しています。
+
+```text
+https://<machine-name>.<tailnet-name>.ts.net (tailnet only)
+|-- / proxy http://127.0.0.1:8080
+```
+
+### 2. 閲覧者を招待する
+
+Tailscale管理画面の **Users > Invite external users** から、閲覧者を`Member`として
+招待します。閲覧者が招待を承認してTailscaleクライアントからこのtailnetへ接続した後、
+User approvalが有効な場合は管理者側でもユーザーを承認します。
+
+Personalプランの無料ユーザー数には所有者自身と参加済みの招待ユーザーが含まれます。
+
+### 3. WebアクセスだけをGrantで許可する
+
+公開元マシンのTailscale IPv4アドレスを確認します。
+
+```bash
+tailscale ip -4
+```
+
+管理画面の **Access controls** を開き、既存ポリシーをバックアップしてから編集します。
+次は、所有者の端末間通信を維持し、招待ユーザーには公開元マシンのHTTPSだけを許可する
+最小構成例です。IPアドレスとメールアドレスは実際の値に置き換えます。
+
+```json
+{
+  "hosts": {
+    "mahjong-score": "100.64.0.10"
+  },
+
+  "grants": [
+    {
+      "src": ["owner@example.com"],
+      "dst": ["autogroup:self"],
+      "ip": ["*"]
+    },
+    {
+      "src": ["guest@example.com"],
+      "dst": ["mahjong-score"],
+      "ip": ["tcp:443"]
+    }
+  ],
+
+  "tests": [
+    {
+      "src": "guest@example.com",
+      "accept": ["mahjong-score:443"],
+      "deny": [
+        "mahjong-score:22",
+        "mahjong-score:8080"
+      ]
+    }
+  ]
+}
+```
+
+Grantで許可するポートは、バックエンドの8080番ではなくTailscale Serveが待ち受ける
+TCP 443番です。
+
+`tests`は実際のアクセス権を追加する設定ではありません。ポリシー保存時に、閲覧者から
+443番への接続が許可され、22番と8080番への接続が拒否されることを静的に検証します。
+将来のポリシー変更で意図せず権限が広がるのを検出するために残します。
+
+#### allow-allルールに注意する
+
+Grantは加算式であり、狭いGrantを追加しても既存の広い許可を上書きできません。
+初期設定などに次のようなallow-allのGrantが残っていると、閲覧者も他の端末やポートへ
+アクセスできます。
+
+```json
+{
+  "src": ["*"],
+  "dst": ["*"],
+  "ip": ["*"]
+}
+```
+
+旧形式の`acls`を併用している場合も含め、閲覧者に一致する広い許可がないことを確認します。
+一方、既存ポリシーを上記例で単純に置き換えると、SSH、Taildrop、exit nodeなど現在利用中の
+通信を止める可能性があります。必要な既存ルールを個別に残したうえでallow-allを整理します。
+
+### 4. 接続を確認する
+
+閲覧者が対象tailnetへ接続した状態で、Serveのステータスに表示されたURLを開きます。
+
+```text
+https://<machine-name>.<tailnet-name>.ts.net
+```
+
+CLIから確認する場合は次を実行します。
+
+```bash
+curl -I https://<machine-name>.<tailnet-name>.ts.net
+```
+
+443番への接続が成功し、次のような直接接続が失敗することも確認します。
+
+```bash
+curl --connect-timeout 5 http://<machine-name>.<tailnet-name>.ts.net:8080
+ssh <machine-name>.<tailnet-name>.ts.net
+```
+
+Grantはネットワーク接続を制限するもので、Webアプリ内のユーザー認証にはなりません。
+機密性の高いデータを扱う場合は、後述の`oauth2-proxy`などアプリケーション層の認証も
+追加します。
+
+### 5. Serveを停止する
+
+```bash
+tailscale serve off
+```
+
 ## 開発コマンド
 
 ```powershell
