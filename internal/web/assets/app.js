@@ -14,6 +14,7 @@ const gameTypeHint = document.querySelector("#game-type-hint");
 const formMessage = document.querySelector("#form-message");
 const gamesContainer = document.querySelector("#games");
 const historyViewButtons = document.querySelectorAll("[data-history-view]");
+const tableOrderButton = document.querySelector("#table-order-button");
 const dialog = document.querySelector("#session-dialog");
 const sessionForm = document.querySelector("#session-form");
 const saveGameButton = document.querySelector("#save-game-button");
@@ -30,6 +31,7 @@ let playerNamesBeforeEdit = null;
 let ruleCitationBeforeEdit = null;
 const savedHistoryView = localStorage.getItem("history-view");
 let historyView = ["tiles", "table", "chart"].includes(savedHistoryView) ? savedHistoryView : "tiles";
+let tableOrder = localStorage.getItem("table-order") === "desc" ? "desc" : "asc";
 
 for (let index = 0; index < 4; index += 1) {
   scoreInputs.insertAdjacentHTML("beforeend", `
@@ -227,6 +229,8 @@ function renderGamesTable() {
     }
   }
 
+  const gamesWithRound = currentGames.map((game, index) => ({game, round: index + 1}));
+  if (tableOrder === "desc") gamesWithRound.reverse();
   gamesContainer.className = "games-table-wrap";
   gamesContainer.innerHTML = `
     <table class="games-table">
@@ -240,11 +244,11 @@ function renderGamesTable() {
         </tr>
       </thead>
       <tbody>
-        ${currentGames.map((game, gameIndex) => {
+        ${gamesWithRound.map(({game, round}) => {
           const scores = new Map(game.results.map(result => [result.playerName, result.score]));
           return `
             <tr>
-              <th scope="row">${gameIndex + 1}回戦</th>
+              <th scope="row">${round}回戦</th>
               ${playerNames.map(name => {
                 const score = scores.get(name);
                 return `<td>${score === undefined ? "—" : `<span class="score-value score-rank-${getScoreRank(game, score)}">${score.toLocaleString()}</span>`}</td>`;
@@ -368,6 +372,8 @@ function updateHistoryViewButtons() {
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-pressed", String(active));
   }
+  tableOrderButton.hidden = historyView !== "table";
+  tableOrderButton.textContent = tableOrder === "asc" ? "新しい順にする" : "古い順にする";
 }
 
 for (const button of historyViewButtons) {
@@ -377,6 +383,11 @@ for (const button of historyViewButtons) {
     renderGames();
   });
 }
+tableOrderButton.addEventListener("click", () => {
+  tableOrder = tableOrder === "asc" ? "desc" : "asc";
+  localStorage.setItem("table-order", tableOrder);
+  renderGames();
+});
 function updateTotal() {
   const total = [...scoreForm.querySelectorAll('input[name^="score-"]')]
     .reduce((sum, input) => sum + Number(input.value || 0), 0);

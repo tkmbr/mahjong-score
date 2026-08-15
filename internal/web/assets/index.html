@@ -74,16 +74,19 @@
           <p class="eyebrow">HISTORY</p>
           <h2>半荘履歴</h2>
         </div>
-        <div class="view-switcher" role="group" aria-label="半荘履歴の表示形式">
-          <button class="view-button is-active" type="button" data-history-view="tiles" aria-pressed="true">
-            <span aria-hidden="true">▦</span> タイル
-          </button>
-          <button class="view-button" type="button" data-history-view="table" aria-pressed="false">
-            <span aria-hidden="true">☷</span> 表
-          </button>
-          <button class="view-button" type="button" data-history-view="chart" aria-pressed="false">
-            <span aria-hidden="true">⌁</span> 得点推移
-          </button>
+        <div class="history-controls">
+          <button id="table-order-button" class="text-button" type="button" hidden>新しい順</button>
+          <div class="view-switcher" role="group" aria-label="半荘履歴の表示形式">
+            <button class="view-button is-active" type="button" data-history-view="tiles" aria-pressed="true">
+              <span aria-hidden="true">▦</span> タイル
+            </button>
+            <button class="view-button" type="button" data-history-view="table" aria-pressed="false">
+              <span aria-hidden="true">☷</span> 表
+            </button>
+            <button class="view-button" type="button" data-history-view="chart" aria-pressed="false">
+              <span aria-hidden="true">⌁</span> 得点推移
+            </button>
+          </div>
         </div>
       </div>
       <div id="games" class="games"></div>

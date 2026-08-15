@@ -69,6 +69,7 @@ main { width: min(1080px, calc(100% - 32px)); margin: 32px auto 72px; }
 .rule-selector { display: grid; grid-template-columns: auto minmax(150px, 220px); align-items: center; gap: 8px; color: #637068; font-size: .78rem; font-weight: 700; }
 .rule-selector select { padding: 7px 9px; font-size: .85rem; }
 .view-switcher { display: inline-flex; padding: 3px; background: #eeece4; border: 1px solid #ded9cb; border-radius: 8px; }
+.history-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .view-button { display: flex; align-items: center; gap: 6px; padding: 7px 11px; color: #66736c; background: transparent; font-size: .85rem; }
 .view-button:hover { color: #17613f; }
 .view-button.is-active { color: white; background: #17613f; box-shadow: 0 1px 3px rgb(24 37 31 / 18%); }
@@ -188,6 +189,7 @@ dialog label { display: grid; gap: 7px; font-weight: 700; }
   .record-actions { justify-self: start; }
   .panel-heading { align-items: flex-start; flex-direction: column; }
   #history-panel .panel-heading { align-items: stretch; }
+  .history-controls { align-items: stretch; flex-direction: column; }
   .game-settings { align-items: stretch; justify-content: stretch; flex-direction: column; width: 100%; }
   .rule-selector { grid-template-columns: auto minmax(0, 1fr); }
   .view-switcher { align-self: stretch; }
