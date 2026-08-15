@@ -103,9 +103,14 @@ th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #e5e2d9;
 th { color: #637068; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
 .score-entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .score-entry { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(80px, .65fr); gap: 8px; padding: 10px; background: #f7f5ee; border: 1px solid #e5e2d9; border-radius: 7px; }
-.score-entry label { display: grid; gap: 4px; min-width: 0; color: #637068; font-size: .72rem; font-weight: 700; }
+.score-entry label, .score-field { display: grid; gap: 4px; min-width: 0; color: #637068; font-size: .72rem; font-weight: 700; }
 .score-entry input { min-width: 0; padding: 8px; border-color: transparent; font-size: .92rem; }
 .score-entry input[name^="score-"] { text-align: right; font-variant-numeric: tabular-nums; }
+.score-input-group { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.score-input-group input { border-radius: 6px 0 0 6px; }
+.score-sign-button { min-width: 38px; padding: 6px 9px; color: #17613f; background: #e8f1ec; border-left: 1px solid #b8d1c3; border-radius: 0 6px 6px 0; font-size: 1rem; }
+.score-sign-button:hover { background: #d7e8de; }
+.score-sign-button:focus-visible { position: relative; outline: 3px solid rgb(216 169 54 / 25%); }
 .form-footer { margin-top: 12px; }
 .form-footer p { margin: 0; font-variant-numeric: tabular-nums; }
 .score-status { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }

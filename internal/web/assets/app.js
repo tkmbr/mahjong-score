@@ -37,10 +37,13 @@ for (let index = 0; index < 4; index += 1) {
         <span>プレイヤー ${index + 1}</span>
         <input name="player-${index}" autocomplete="off" placeholder="名前">
       </label>
-      <label>
+      <div class="score-field">
         <span>スコア</span>
-        <input name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="プレイヤー ${index + 1}の1000点単位のスコア">
-      </label>
+        <div class="score-input-group">
+          <input id="score-${index}" name="score-${index}" type="number" inputmode="numeric" required value="0" aria-label="プレイヤー ${index + 1}の1000点単位のスコア">
+          <button type="button" class="score-sign-button" data-score-sign="${index}" aria-controls="score-${index}" aria-label="プレイヤー ${index + 1}のスコアのプラスとマイナスを切り替える">±</button>
+        </div>
+      </div>
     </div>
   `);
 }
@@ -400,6 +403,15 @@ function updateTotal() {
 }
 
 scoreForm.addEventListener("input", updateTotal);
+scoreInputs.addEventListener("click", event => {
+  const signButton = event.target.closest("[data-score-sign]");
+  if (!signButton) return;
+  const input = scoreForm.elements[`score-${signButton.dataset.scoreSign}`];
+  const score = Number(input.value || 0);
+  input.value = String(-score);
+  input.focus();
+  updateTotal();
+});
 scoreForm.addEventListener("submit", async event => {
   event.preventDefault();
   formMessage.textContent = "";
