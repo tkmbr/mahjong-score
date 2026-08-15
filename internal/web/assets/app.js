@@ -17,6 +17,7 @@ const historyViewButtons = document.querySelectorAll("[data-history-view]");
 const dialog = document.querySelector("#session-dialog");
 const sessionForm = document.querySelector("#session-form");
 const saveGameButton = document.querySelector("#save-game-button");
+const copyLatestGameButton = document.querySelector("#copy-latest-game");
 const cancelGameEditButton = document.querySelector("#cancel-game-edit");
 const ruleCitationSelect = document.querySelector("#rule-citation-select");
 const ruleRepository = "tkmbr/mahjong-rule";
@@ -92,6 +93,7 @@ async function loadGames() {
   currentGames = await api(`/api/sessions/${sessionSelect.value}/games`);
   for (const game of currentGames) addRuleCitationOption(game.ruleCitation);
   renderGames();
+  updateCopyLatestGameButton();
 }
 
 function renderGames() {
@@ -402,6 +404,10 @@ function updateTotal() {
   }
 }
 
+function updateCopyLatestGameButton() {
+  copyLatestGameButton.disabled = editingGameID !== null || currentGames.length === 0;
+}
+
 scoreForm.addEventListener("input", updateTotal);
 scoreInputs.addEventListener("click", event => {
   const signButton = event.target.closest("[data-score-sign]");
@@ -411,6 +417,19 @@ scoreInputs.addEventListener("click", event => {
   input.value = String(-score);
   input.focus();
   updateTotal();
+});
+copyLatestGameButton.addEventListener("click", () => {
+  const latestGame = currentGames.at(-1);
+  if (!latestGame || editingGameID !== null) return;
+  for (let index = 0; index < 4; index += 1) {
+    const result = latestGame.results[index];
+    scoreForm.elements[`player-${index}`].value = result?.playerName ?? "";
+    scoreForm.elements[`score-${index}`].value = String(result?.score ?? 0);
+  }
+  ruleCitationSelect.value = addRuleCitationOption(latestGame.ruleCitation);
+  formMessage.textContent = "最新の半荘結果をコピーしました。";
+  updateTotal();
+  scoreForm.elements["score-0"].focus();
 });
 scoreForm.addEventListener("submit", async event => {
   event.preventDefault();
@@ -461,6 +480,7 @@ function startGameEdit(gameID) {
   ruleCitationSelect.value = addRuleCitationOption(game.ruleCitation);
   saveGameButton.textContent = "変更を保存";
   cancelGameEditButton.hidden = false;
+  updateCopyLatestGameButton();
   formMessage.textContent = "";
   updateTotal();
   scorePanel.scrollIntoView({behavior: "smooth", block: "start"});
@@ -475,6 +495,7 @@ function cancelGameEdit(clearInputs = true) {
   scorePanelTitle.textContent = "半荘結果を入力";
   saveGameButton.textContent = "半荘を保存";
   cancelGameEditButton.hidden = true;
+  updateCopyLatestGameButton();
   if (clearInputs) {
     for (let index = 0; index < 4; index += 1) {
       scoreForm.elements[`player-${index}`].value = namesToRestore?.[index] ?? "";
