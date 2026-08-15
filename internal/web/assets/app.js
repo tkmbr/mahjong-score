@@ -455,7 +455,9 @@ copyLatestGameButton.addEventListener("click", () => {
   ruleCitationSelect.value = addRuleCitationOption(latestGame.ruleCitation);
   formMessage.textContent = "最新の半荘結果をコピーしました。";
   updateTotal();
-  scoreForm.elements["score-0"].focus();
+  const firstScoreInput = scoreForm.elements["score-0"];
+  firstScoreInput.focus();
+  firstScoreInput.select();
 });
 scoreForm.addEventListener("submit", async event => {
   event.preventDefault();
