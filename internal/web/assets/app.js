@@ -1,3 +1,13 @@
+const appTimeZone = "Asia/Tokyo";
+
+function japanDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: appTimeZone, year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(date);
+  const value = type => parts.find(part => part.type === type).value;
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
 const sessionSelect = document.querySelector("#session-select");
 const importButton = document.querySelector("#import-button");
 const importFile = document.querySelector("#import-file");
@@ -187,10 +197,12 @@ function renderGameTime(createdAt) {
   if (Number.isNaN(date.getTime())) return '<span class="game-time">—</span>';
 
   const time = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: appTimeZone,
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
   const fullDate = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: appTimeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -561,7 +573,7 @@ document.querySelector("#new-session-button").addEventListener("click", () => {
   sessionForm.reset();
   document.querySelector("#session-dialog-title").textContent = "対局日を作成";
   document.querySelector("#save-session-button").textContent = "作成する";
-  document.querySelector("#session-date").valueAsDate = new Date();
+  document.querySelector("#session-date").value = japanDate();
   dialog.showModal();
 });
 

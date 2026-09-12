@@ -53,7 +53,7 @@ func (h *Handler) exportData(w http.ResponseWriter, r *http.Request) {
 	backup := service.Backup{
 		Format:     service.BackupFormat,
 		Version:    service.BackupVersion,
-		ExportedAt: time.Now(),
+		ExportedAt: time.Now().UTC(),
 		Sessions:   make([]service.BackupSession, 0, len(sessions)),
 	}
 	for _, session := range sessions {

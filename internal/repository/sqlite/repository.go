@@ -136,11 +136,11 @@ func (r *Repository) CreateGame(ctx context.Context, game domain.Game) (domain.G
 	}
 	defer tx.Rollback()
 
-	game.CreatedAt = time.Now()
+	game.CreatedAt = time.Now().UTC()
 	revision, rulePath, title := citationValues(game.RuleCitation)
 	result, err := tx.ExecContext(ctx,
 		`INSERT INTO games (session_id, rule_revision, rule_path, rule_title, created_at) VALUES (?, ?, ?, ?, ?)`,
-		game.SessionID, revision, rulePath, title, game.CreatedAt.Format(time.RFC3339),
+		game.SessionID, revision, rulePath, title, game.CreatedAt.UTC().Format(time.RFC3339),
 	)
 	if err != nil {
 		return domain.Game{}, err
@@ -206,6 +206,13 @@ func (r *Repository) ListGames(ctx context.Context, sessionID int64) ([]domain.G
 		}
 		games[index].Results = append(games[index].Results, result)
 	}
+	// Compare instants so legacy offsets and UTC records can coexist.
+	sort.SliceStable(games, func(i, j int) bool {
+		if games[i].CreatedAt.Equal(games[j].CreatedAt) {
+			return games[i].ID < games[j].ID
+		}
+		return games[i].CreatedAt.Before(games[j].CreatedAt)
+	})
 	return games, rows.Err()
 }
 
@@ -292,7 +299,7 @@ func (r *Repository) ImportSessions(ctx context.Context, sessions []domain.Sessi
 			revision, rulePath, title := citationValues(game.RuleCitation)
 			gameResult, err := tx.ExecContext(ctx,
 				`INSERT INTO games (session_id, rule_revision, rule_path, rule_title, created_at) VALUES (?, ?, ?, ?, ?)`,
-				sessionID, revision, rulePath, title, game.CreatedAt.Format(time.RFC3339),
+				sessionID, revision, rulePath, title, game.CreatedAt.UTC().Format(time.RFC3339),
 			)
 			if err != nil {
 				return err

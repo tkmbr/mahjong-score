@@ -9,12 +9,19 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/tkmbr/mahjong-score/internal/repository/sqlite"
 	"github.com/tkmbr/mahjong-score/internal/web"
 )
 
 func main() {
+	location, err := time.LoadLocation(envOrDefault("TZ", "Asia/Tokyo"))
+	if err != nil {
+		log.Fatalf("load timezone: %v", err)
+	}
+	time.Local = location
+	log.Printf("timezone=%s current_time=%s", location, time.Now().Format(time.RFC3339))
 	addr := envOrDefault("ADDR", ":8080")
 	databasePath := envOrDefault("DATABASE_PATH", "./data/mahjong-score.db")
 

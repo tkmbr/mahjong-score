@@ -9,6 +9,28 @@ import (
 	"github.com/tkmbr/mahjong-score/internal/domain"
 )
 
+func TestListGamesWithMixedTimezones(t *testing.T) {
+	r, err := Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	_, err = r.db.Exec(`
+INSERT INTO sessions(id, name, played_at) VALUES(1, 'test', '2026-01-01T00:00:00Z');
+INSERT INTO games(id, session_id, created_at) VALUES
+ (1, 1, '2026-01-01T00:30:00+09:00'),
+ (2, 1, '2025-12-31T16:00:00Z');
+INSERT INTO game_results(game_id, position, player_name, score) VALUES
+ (1, 0, 'A', 0), (2, 0, 'A', 0);`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	games, err := r.ListGames(context.Background(), 1)
+	if err != nil || len(games) != 2 || games[0].ID != 1 || games[1].ID != 2 {
+		t.Fatalf("games=%v err=%v", games, err)
+	}
+}
+
 func TestUpdateAndDeleteRecords(t *testing.T) {
 	repository, err := Open(filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
